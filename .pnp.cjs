@@ -36,7 +36,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@astrojs/mdx", "npm:0.19.7"],\
             ["@astrojs/rss", "npm:2.4.3"],\
             ["@astrojs/sitemap", "npm:1.3.3"],\
-            ["astro", "virtual:2444637b00e27448fe9bbf3ba9fc7fe4410f37a08dbb9419a9b4a34fd563057824883b0359d23b998814d29fe76188ef85d31cccf90cbcdd4b230cb6fb9119de#npm:2.6.5"]\
+            ["astro", "virtual:2444637b00e27448fe9bbf3ba9fc7fe4410f37a08dbb9419a9b4a34fd563057824883b0359d23b998814d29fe76188ef85d31cccf90cbcdd4b230cb6fb9119de#npm:2.6.5"],\
+            ["typescript", "patch:typescript@npm%3A5.1.3#~builtin<compat/typescript>::version=5.1.3&hash=a1c5e5"]\
           ],\
           "linkType": "SOFT"\
         }]\
@@ -5715,7 +5716,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@astrojs/mdx", "npm:0.19.7"],\
             ["@astrojs/rss", "npm:2.4.3"],\
             ["@astrojs/sitemap", "npm:1.3.3"],\
-            ["astro", "virtual:2444637b00e27448fe9bbf3ba9fc7fe4410f37a08dbb9419a9b4a34fd563057824883b0359d23b998814d29fe76188ef85d31cccf90cbcdd4b230cb6fb9119de#npm:2.6.5"]\
+            ["astro", "virtual:2444637b00e27448fe9bbf3ba9fc7fe4410f37a08dbb9419a9b4a34fd563057824883b0359d23b998814d29fe76188ef85d31cccf90cbcdd4b230cb6fb9119de#npm:2.6.5"],\
+            ["typescript", "patch:typescript@npm%3A5.1.3#~builtin<compat/typescript>::version=5.1.3&hash=a1c5e5"]\
           ],\
           "linkType": "SOFT"\
         }]\

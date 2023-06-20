@@ -28,6 +28,14 @@ b {
 a {
   color: #3273dc;
 }
+
+/* Baseline for default links */
+a:not([class]) {
+  /* Relatively sized thickness and offset */
+  text-decoration-thickness: max(0.08em, 1px);
+  text-underline-offset: 0.15em;
+}
+
 nav a {
   margin-right: 10px;
 }
@@ -64,4 +72,74 @@ blockquote {
   padding: 2px 0px 2px 20px;
   margin: 0px;
   font-style: italic;
+}
+
+:focus-visible {
+  --outline-size: max(2px, 0.15em);
+
+  outline: var(--outline-width, var(--outline-size)) var(--outline-style, solid)
+    var(--outline-color, currentColor);
+  outline-offset: var(--outline-offset, var(--outline-size));
+}
+
+/* Scroll padding allowance below focused elements 
+ *   to ensure they are clearly in view */
+:focus {
+  scroll-padding-block-end: 8vh;
+}
+
+/* Scroll padding allowance above anchor links */
+:target {
+  scroll-padding-block-start: 2rem;
+}
+
+@layer theme {
+  :root {
+    /* Color styles */
+    --primary: hsl(265, 38%, 13%);
+    --secondary: hsl(283, 6%, 45%);
+    --tertiary: hsl(257, 15%, 91%);
+    --light: hsl(270, 100%, 99%);
+    --accent: hsl(278, 100%, 92%);
+    --accent--alt: hsl(279, 100%, 97%);
+    --accent--ui: hsl(284, 55%, 66%);
+
+    /* Layout default props */
+    --layout-column-min: 30ch;
+    --layout-gap: 3vmax;
+  }
+
+  html {
+    color-scheme: light;
+    accent-color: var(--accent--ui);
+  }
+
+  .layout-grid {
+    --layout-grid-min: var(--layout-column-min);
+    --layout-grid-gap: var(--layout-gap);
+
+    display: grid;
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(min(100%, var(--layout-grid-min)), 1fr)
+    );
+    gap: var(--layout-grid-gap);
+  }
+
+  .flex-layout-grid {
+    --flex-grid-min: var(--layout-column-min);
+    --flex-grid-gap: var(--layout-gap);
+
+    gap: var(--flex-grid-gap);
+    display: flex;
+    flex-wrap: wrap;
+
+    > * {
+      flex: 1 1 var(--flex-grid-min);
+    }
+  }
+
+  :is(.layout-grid, .flex-layout-grid) > * {
+    container: var(--grid-item-container, grid-item) / inline-size;
+  }
 }
