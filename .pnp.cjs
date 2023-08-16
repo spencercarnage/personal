@@ -37,6 +37,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@astrojs/rss", "npm:2.4.3"],\
             ["@astrojs/sitemap", "npm:1.3.3"],\
             ["astro", "virtual:2444637b00e27448fe9bbf3ba9fc7fe4410f37a08dbb9419a9b4a34fd563057824883b0359d23b998814d29fe76188ef85d31cccf90cbcdd4b230cb6fb9119de#npm:2.6.5"],\
+            ["sass", "npm:1.65.1"],\
             ["typescript", "patch:typescript@npm%3A5.1.3#~builtin<compat/typescript>::version=5.1.3&hash=a1c5e5"]\
           ],\
           "linkType": "SOFT"\
@@ -2960,6 +2961,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
+      ["immutable", [\
+        ["npm:4.3.2", {\
+          "packageLocation": "./.yarn/cache/immutable-npm-4.3.2-413e7ca19b-bb1d0f3eb8.zip/node_modules/immutable/",\
+          "packageDependencies": [\
+            ["immutable", "npm:4.3.2"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
       ["import-meta-resolve", [\
         ["npm:2.2.2", {\
           "packageLocation": "./.yarn/cache/import-meta-resolve-npm-2.2.2-6deef460f2-3a5910a6f9.zip/node_modules/import-meta-resolve/",\
@@ -5203,6 +5213,18 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
+      ["sass", [\
+        ["npm:1.65.1", {\
+          "packageLocation": "./.yarn/cache/sass-npm-1.65.1-d6fc30b338-33e325fc80.zip/node_modules/sass/",\
+          "packageDependencies": [\
+            ["sass", "npm:1.65.1"],\
+            ["chokidar", "npm:3.5.3"],\
+            ["immutable", "npm:4.3.2"],\
+            ["source-map-js", "npm:1.0.2"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
       ["sass-formatter", [\
         ["npm:0.7.6", {\
           "packageLocation": "./.yarn/cache/sass-formatter-npm-0.7.6-d4e60fc4c9-2c123f7c75.zip/node_modules/sass-formatter/",\
@@ -5717,6 +5739,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@astrojs/rss", "npm:2.4.3"],\
             ["@astrojs/sitemap", "npm:1.3.3"],\
             ["astro", "virtual:2444637b00e27448fe9bbf3ba9fc7fe4410f37a08dbb9419a9b4a34fd563057824883b0359d23b998814d29fe76188ef85d31cccf90cbcdd4b230cb6fb9119de#npm:2.6.5"],\
+            ["sass", "npm:1.65.1"],\
             ["typescript", "patch:typescript@npm%3A5.1.3#~builtin<compat/typescript>::version=5.1.3&hash=a1c5e5"]\
           ],\
           "linkType": "SOFT"\
