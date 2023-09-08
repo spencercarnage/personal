@@ -1,108 +1,121 @@
-@import 'https://fonts.googleapis.com/css?family=Roboto:300,400,500';
+@import "https://fonts.googleapis.com/css?family=Roboto:300,400,500";
 
-/*
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    height: 100%;
+  }
+
+  /*
   The CSS in this style tag is based off of Bear Blog's default CSS.
   https://github.com/HermanMartinus/bearblog/blob/297026a877bc2ab2b3bdfbd6b9f7961c350917dd/templates/styles/blog/default.css
   License MIT: https://github.com/HermanMartinus/bearblog/blob/master/LICENSE.md
  */
-body {
-  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
-  margin: auto;
-  padding: 20px;
-  max-width: 65ch;
-  text-align: left;
-  background-color: #fff;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  line-height: 1.5;
-  color: #444;
-}
+  body {
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    margin: auto;
+    padding: 20px;
+    max-width: 65ch;
+    text-align: left;
+    background-color: #fff;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.5;
+    color: #c4c4c8;
+    background: linear-gradient(90deg, #353745, #564c55);
+    height: 100%;
+  }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-strong,
-b {
-  color: #222;
-}
-a {
-  color: #3273dc;
-}
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  strong,
+  b {
+    color: #fff;
+  }
 
-/* Baseline for default links */
-a:not([class]) {
-  /* Relatively sized thickness and offset */
-  text-decoration-thickness: max(0.08em, 1px);
-  text-underline-offset: 0.15em;
-}
+  a {
+    color: #f8bdc1;
+  }
 
-nav a {
-  margin-right: 10px;
-}
+  /* Baseline for default links */
+  a:not([class]) {
+    /* Relatively sized thickness and offset */
+    text-decoration-thickness: max(0.08em, 1px);
+    text-underline-offset: 0.15em;
+  }
 
-textarea {
-  width: 100%;
-  font-size: 16px;
-}
+  nav a {
+    margin-right: 10px;
+  }
 
-input {
-  font-size: 16px;
-}
+  textarea {
+    width: 100%;
+    font-size: 16px;
+  }
 
-content {
-  line-height: 1.6;
-}
+  input {
+    font-size: 16px;
+  }
 
-table {
-  width: 100%;
-}
+  content {
+    line-height: 1.6;
+  }
 
-img {
-  max-width: 100%;
-  height: auto;
-}
+  table {
+    width: 100%;
+  }
 
-code {
-  padding: 2px 5px;
-  background-color: #f2f2f2;
-}
+  img {
+    max-width: 100%;
+    height: auto;
+  }
 
-pre {
-  padding: 1rem;
-}
+  code {
+    padding: 2px 5px;
+    background-color: #f2f2f2;
+  }
 
-pre > code {
-  all: unset;
-}
+  pre {
+    padding: 1rem;
+  }
 
-blockquote {
-  border: 1px solid #999;
-  color: #222;
-  padding: 2px 0px 2px 20px;
-  margin: 0px;
-  font-style: italic;
-}
+  pre > code {
+    all: unset;
+  }
 
-:focus-visible {
-  --outline-size: max(2px, 0.15em);
+  blockquote {
+    border: 1px solid #999;
+    color: #222;
+    padding: 2px 0px 2px 20px;
+    margin: 0px;
+    font-style: italic;
+  }
 
-  outline: var(--outline-width, var(--outline-size)) var(--outline-style, solid)
-    var(--outline-color, currentColor);
-  outline-offset: var(--outline-offset, var(--outline-size));
-}
+  :focus-visible {
+    --outline-size: max(2px, 0.15em);
 
-/* Scroll padding allowance below focused elements 
+    outline: var(--outline-width, var(--outline-size))
+      var(--outline-style, solid) var(--outline-color, currentColor);
+    outline-offset: var(--outline-offset, var(--outline-size));
+  }
+
+  /* Scroll padding allowance below focused elements 
  *   to ensure they are clearly in view */
-:focus {
-  scroll-padding-block-end: 8vh;
-}
+  :focus {
+    scroll-padding-block-end: 8vh;
+  }
 
-/* Scroll padding allowance above anchor links */
-:target {
-  scroll-padding-block-start: 2rem;
+  /* Scroll padding allowance above anchor links */
+  :target {
+    scroll-padding-block-start: 2rem;
+  }
 }
 
 @layer theme {
