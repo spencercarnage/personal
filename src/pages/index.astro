@@ -2,11 +2,17 @@
 import BaseHead from "../components/BaseHead.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
+import FormattedDate from "../components/FormattedDate.astro";
 import { SITE_TITLE, SITE_DESCRIPTION } from "../consts";
 
 const devStartYear = 2009;
-const mgmtStartYear = 2017;
+// const mgmtStartYear = 2017;
 const now = new Date();
+import { getCollection } from "astro:content";
+
+const posts = (await getCollection("blog")).sort(
+  (a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf()
+);
 ---
 
 <!doctype html>
@@ -17,25 +23,28 @@ const now = new Date();
   <body>
     <Header title={SITE_TITLE} />
     <main>
-      <h1>Hi!</h1>
       <p>
-        My name is Spencer Carney. I live in Los Angeles with my wife and two
-        children. I am the manager of the UI engineering team at <a
-          href="https://www.instil.io/"
-          target="_blank"
-          rel="noopener noreferrer">Instil</a
-        >
-         I have been doing front-end development for {
+        My name is Spencer Carney. I have been doing front-end development for {
           now.getFullYear() - devStartYear
         }
-         years, and managing engineers for {now.getFullYear() - mgmtStartYear}
-        years.
+         years. I help teams grow through both coding and coaching.
       </p>
-      <p>
-        I am a firm believer that the web is for everyone, regardless of their
-        device or connection speed.
-      </p>
+
+      <p>I live in Los Angeles with my wife and two children.</p>
     </main>
+
+    <section>
+      {
+        posts.map((post) => (
+          <article>
+            <div>
+              <FormattedDate className="block" date={post.data.pubDate} />
+              <a href={`/blog/${post.slug}/`}>{post.data.title}</a>
+            </div>
+          </article>
+        ))
+      }
+    </section>
 
     <Footer />
   </body>

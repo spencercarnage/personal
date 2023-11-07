@@ -2,6 +2,13 @@
 title: 'Yarn Modern with Plug''n''Play and "Zero-Installs"'
 description: 'A primer on how to add Yarn Modern with Plug''n''Play and "Zero-Installs" to a JavaScript project'
 pubDate: "May 26 2023"
+previewCode: ".yarn/*\n!.yarn/cache\n!.yarn/patches\n!.yarn/plugins\n!.yarn/releases\n!.yarn/sdks\n!.yarn/versions\n
+\n
+# Swap the comments on the following lines if you don't wish to\n
+use Zero-Installs\n
+# Documentation here: https://yarnpkg.com/features/Zero-Installs\n
+!.yarn/cache\n
+#.pnp.*\n"
 ---
 
 Ever since Facebook released Yarn in 2016, it has become an
