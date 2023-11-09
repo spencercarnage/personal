@@ -1,6 +1,6 @@
 {
   "name": "tutorial",
-  "packageManager": "yarn@3.2.3",
+  "packageManager": "yarn@4.0.1",
   "type": "module",
   "version": "0.0.1",
   "private": true,
