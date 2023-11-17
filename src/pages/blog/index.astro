@@ -19,25 +19,18 @@ const posts = (await getCollection("blog")).sort(
   <body>
     <Header />
     <main>
-      <section>
-        <div class="layout-grid">
-          {
-            posts.map((post) => (
-              <span class="aspect-square border-2">
+      <section id="blog-index" class="layout-grid">
+        {
+          posts.map((post) => (
+            <div>
+              <div>
                 <FormattedDate className="block" date={post.data.pubDate} />
-                <a href={`/blog/${post.slug}/`}>{post.data.title}</a>
-              </span>
-            ))
-          }
-          {
-            posts.map((post) => (
-              <span class="aspect-square border-2">
-                <FormattedDate className="block" date={post.data.pubDate} />
-                <a href={`/blog/${post.slug}/`}>{post.data.title}</a>
-              </span>
-            ))
-          }
-        </div>
+              </div>
+
+              <a href={`/blog/${post.slug}/`}>{post.data.title}</a>
+            </div>
+          ))
+        }
       </section>
 
       <Footer />

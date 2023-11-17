@@ -167,4 +167,10 @@
   :is(.layout-grid, .flex-layout-grid) > * {
     container: var(--grid-item-container, grid-item) / inline-size;
   }
+  
+}
+
+#blog-index {
+  --layout-gap: 3vmax;
+  --layout-column-min: 100%;
 }
