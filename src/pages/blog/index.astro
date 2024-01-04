@@ -19,7 +19,7 @@ const posts = (await getCollection("blog")).sort(
   <body>
     <Header />
     <main>
-      <section id="blog-index" class="layout-grid">
+      <section class="posts layout-grid">
         {
           posts.map((post) => (
             <div>
