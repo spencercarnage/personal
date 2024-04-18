@@ -1,10 +1,9 @@
 {
   "eslint.packageManager": "yarn",
   "eslint.nodePath": ".yarn/sdks",
-  "prettier.prettierPath": ".yarn/sdks",
   "prettier.stylelintIntegration": true,
   "tsserver.log": "verbose",
-  "tsserver.tsdk": "${workspaceFolder}/.yarn/sdks/typescript/lib",
+  "tsserver.tsdk": ".yarn/sdks/typescript/lib",
   "workspace.workspaceFolderCheckCwd": false,
   "tsserver.useLocalTsdk": true
 }
