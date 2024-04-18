@@ -1,5 +1,5 @@
 {
-  "name": "tutorial",
+  "name": "personal",
   "packageManager": "yarn@4.0.2",
   "type": "module",
   "version": "0.0.1",
@@ -15,10 +15,10 @@
     "astro": "astro"
   },
   "devDependencies": {
-    "@astrojs/mdx": "2.0.3",
-    "@astrojs/rss": "4.0.1",
-    "@astrojs/sitemap": "3.0.4",
-    "astro": "4.1.0",
+    "@astrojs/mdx": "^2.2.1",
+    "@astrojs/rss": "^4.0.5",
+    "@astrojs/sitemap": "^3.1.1",
+    "astro": "^4.5.8",
     "sass": "^1.65.1",
     "typescript": "^5.1.3"
   }

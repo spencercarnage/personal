@@ -3,18 +3,6 @@ title: "Scaling Your Codebase with Tailwind CSS's @apply
 Directive"
 description: "Lorem ipsum dolor sit amet"
 pubDate: "Jun 15 2023"
-previewCode: "
-.link {\n
-\t@apply text-orange-600 hover:text-orange-900; focus:text-orange-900\n
-}\n
-
-.large-sub-header {\n
-\t@apply font-sans font-semibold text-lg text-stone-600;\n
-}\n
-
-.grid-layout {\n
-\t@apply grid gap-3;\n
-}\n"
 ---
 
 When it comes to rapidly building features, Tailwind CSS's
