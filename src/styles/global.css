@@ -4,13 +4,14 @@
     margin: auto;
     padding: 20px 20px 4rem;
     max-width: 80ch;
+    font-size: var(--size-step-0);
     text-align: left;
     background-color: #fff;
     word-wrap: break-word;
     overflow-wrap: break-word;
     line-height: 1.5;
-    color: #c4c4c8;
-    background: linear-gradient(90deg, #353745, #564c55);
+    color: var(--light);
+    background: var(--dark);
     min-height: 100vh;
   }
 
@@ -26,7 +27,12 @@
   }
 
   a {
-    color: #f8bdc1;
+    color: currentColor;
+    text-decoration-color: var(--primary);
+
+    &:hover {
+      text-decoration-color: var(--secondary);
+    }
   }
 
   /* Baseline for default links */
@@ -64,7 +70,7 @@
 
   code {
     padding: 2px 5px;
-    background-color: #24292e;
+    background-color: var(--tertiary);
   }
 
   pre {
@@ -73,6 +79,10 @@
 
   pre > code {
     all: unset;
+  }
+
+  p {
+    max-width: 50ch;
   }
 
   blockquote {
@@ -107,21 +117,25 @@
 @layer theme {
   :root {
     /* Color styles */
-    --primary: hsl(265, 38%, 13%);
-    --secondary: hsl(283, 6%, 45%);
-    --tertiary: hsl(257, 15%, 91%);
-    --light: hsl(270, 100%, 99%);
-    --accent: hsl(278, 100%, 92%);
-    --accent--alt: hsl(279, 100%, 97%);
-    --accent--ui: hsl(284, 55%, 66%);
+    --dark: #030303;
+    --primary: #ff006a;
+    --secondary: #00ffd4;
+    --tertiary: #350df2;
+    --light: #fff;
+    --accent: #350df2;
+    --accent--ui: #350df2;
 
     /* Layout default props */
     --layout-column-min: 30ch;
     --layout-gap: 3vmax;
+
+    --size-step-0: clamp(1.125rem, 0.98rem + 0.69vw, 1.5rem);
+    --space-s-l: clamp(1.125rem, 0.41rem + 3.45vw, 3rem);
+    --gutter: var(--space-s-l);
   }
 
   html {
-    color-scheme: light;
+    /* color-scheme: light; */
     accent-color: var(--accent--ui);
   }
 }
@@ -168,6 +182,18 @@
     margin-bottom: 4rem;
   }
 
+  .wrapper {
+    margin-inline: auto;
+    max-width: clamp(16rem, var(--wrapper-max-width, 100vw), 80rem);
+    padding-left: var(--gutter);
+    padding-right: var(--gutter);
+    position: relative;
+  }
+
+  .prose :is(h1, h2, h3, h4, h5, p, ul, ol, blockquote) {
+    max-width: 60ch;
+  }
+
   .posts {
     --layout-gap: 2vmax;
     --layout-column-min: 100%;
@@ -178,11 +204,6 @@
 
     .post__postLink {
       font-size: 2rem;
-      text-decoration: none;
-
-      &:hover {
-        text-decoration: underline;
-      }
     }
   }
 }
