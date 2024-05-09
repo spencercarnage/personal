@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   theme: {
     colors: {
       black: "#333",
