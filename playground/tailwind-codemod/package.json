@@ -1,0 +1,16 @@
+{
+  "name": "tailwind-codemod-playground",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "jscodeshift": "^0.15.2",
+    "nopt": "^7.2.0"
+  }
+}

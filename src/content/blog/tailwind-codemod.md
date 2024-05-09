@@ -4,15 +4,16 @@ description: "Foo Bar Baz"
 pubDate: "May 26 2024"
 ---
 
-Working on a converting create-react-app codebase to one that uses Next.js,
+While working on a converting `create-react-app` codebase to one that uses Next.js,
 I found myself with a very niche problem: all of the Material Design based class
-names that were created using TailwindCSS had to be changed. The
-`text-primary-main` class needed to be turned into `text-red-500`.
-`text-primary-main` and `text-red-500` both used the same hexidecimal value,
-`#f43f5e` but the Material Design classes like `text-primary-main` were now
-deprecated.
+names that were created using TailwindCSS had to be changed. The "primary" color
+was `#f43f5e`. In the new code base, `#f43f53` was mapped to `red-500`. That
+meant that `text-primary-main` class was being replaced with `text-red-500`.
+With the Material Design class names being deprecated, a class like
+`text-primary-main` needed to be updated to its color specific class name,
+`text-red-500`.
 
-The "legacy" `tailwind.config.js` file had its colors set up like so:
+The "legacy" `tailwind.config.js` file had its colors set up like this:
 
 ```
 module.exports = {
@@ -38,10 +39,12 @@ module.exports = {
 }
 ```
 
-The newer `tailwind.config.js` is set up like this:
+You will notice that the legacy config file was a CommonJS file. The new config
+file was an ECMAScript module. That newer config file, `tailwind.config.mjs`
+(note the `.mjs` filee extension) is set up like this:
 
 ```
-module.exports = {
+export default {
   theme: {
     colors: {
       black: "#333",
@@ -77,10 +80,11 @@ module.exports = {
 }
 ```
 
-The Material Design colors are still being used. They have been replaced with a
-palette that captures all of the hues for the base colors used. This opens up
+The colors from the Material Design inspired legacy config file are still being used.
+They have been replaced with a palette that captures all of the hues for the base colors that previously made
+up the Material Design colors. This opens up
 the possiblity for using more colors without having to add a primary "lighter"
-option when a lighter color is needed.
+option when a lighter red color than `.primary-light` is needed.
 
 This newly, expanded color palette presents a challenge: how do we update the
 classes of 1000+ React components to use the new Tailwind class names? How do we
@@ -88,7 +92,7 @@ update `text-primary-main` and `bg-primary-main` to `text-red-500` and
 `bg-red-500`? With JavaScript.
 
 Using Node.js, I will show you how to write a script that generates
-values from the two `tailwind.config.js` files, outputting a JSON
+values from the two `tailwind.config.mjs` files, outputting a JSON
 file that we can use
 
 ```
@@ -115,11 +119,11 @@ that conversion:
 
 When it is time to update the React components, we can use this object to
 determine what the new value of `text-primary-main` should be. We'll use both
-`tailwind.config.js` files to create this "look up" object.
+`tailwind.config.mjs` files to create this "look up" object.
 
-Parsing tailwind.config.js
+Parsing tailwind.config.mjs
 
-For practical reasons, we will pretend that both `tailwind.config.js` files are
+For practical reasons, we will pretend that both `tailwind.config.mjs` files are
 the same in terms of their structure. Their respective color values are the main
 difference between the two.
 
@@ -143,11 +147,11 @@ module.exports = {
 }
 ```
 
-How do we get the values from the `tailwind.config.js` files with Node.js? JSCodeShift.
+How do we get the values from the `tailwind.config.mjs` files with Node.js? JSCodeShift.
 
 JSCodeShift is a library for writing "codemods". _Definition of codemod_. We do not
 want to modify any code with JSCodeShift. That comes later. We only want to get the
-abstract syntax tree from the `tailwind.config.js` files, and JSCodeShift is a good
+abstract syntax tree from the `tailwind.config.mjs` files, and JSCodeShift is a good
 enough tool for doing that. Later we will do more exciting things with JSCodeShift, such
 as parsing and updating React components.
 
@@ -162,7 +166,7 @@ We will use LIBRARY to parse the two command line arguments. If any of the two
 arguments are missing, we will exit the program.
 
 At this point, we are only logging the values of the two arguments. Next will
-set up JSCodeShift to parse the `tailwind.config.js` files, logging their contents.
+set up JSCodeShift to parse the `tailwind.config.mjs` files, logging their contents.
 
 code snippet
 
