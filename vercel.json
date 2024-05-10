@@ -1,0 +1,7 @@
+{
+  "git": {
+    "deploymentEnabled": {
+      "tailwind-codemod": false
+    }
+  }
+}
