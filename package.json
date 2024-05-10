@@ -1,6 +1,5 @@
 {
   "name": "personal",
-  "packageManager": "yarn@4.0.2",
   "type": "module",
   "version": "0.0.1",
   "private": true,
