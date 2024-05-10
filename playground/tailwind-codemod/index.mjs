@@ -1,6 +1,6 @@
-import fs from "fs/promises";
-import path from "path";
-import * as url from "url";
+import fs from "node:fs/promises";
+import path from "node:path";
+import * as url from "node:url";
 import j from "jscodeshift";
 import nopt from "nopt";
 
@@ -12,7 +12,7 @@ const { legacy, updated } = nopt(
   },
   {},
   process.argv,
-  2
+  2,
 );
 
 /**
@@ -37,9 +37,9 @@ function parseAstObjectProperties(colors, nodePath) {
   } else if (nodePath.value.type === "ObjectExpression") {
     colors[nodePath.key.name || nodePath.key.value] = {};
 
-    nodePath.value.properties.forEach((propertyPath) => {
+    for (const propertyPath of nodePath.value.properties) {
       parseAstObjectProperties(colors[nodePath.key.name], propertyPath);
-    });
+    }
   }
 }
 
@@ -48,6 +48,7 @@ function parseAstObjectProperties(colors, nodePath) {
  * values from it, adding them to the provided `colors` argument.
  */
 function getColorsFromAst(ast, colors) {
+  // biome-ignore lint/complexity/noForEach: ignore ast.forEach
   ast
     .find(j.Property, {
       key: {
@@ -55,9 +56,9 @@ function getColorsFromAst(ast, colors) {
       },
     })
     .forEach((path) => {
-      path.value.value.properties.forEach((path) => {
-        parseAstObjectProperties(colors, path);
-      });
+      for (const propertyPath of path.value.value.properties) {
+        parseAstObjectProperties(colors, propertyPath);
+      }
     });
 }
 
@@ -88,13 +89,13 @@ getColorsFromAst(newAst, newColors);
  */
 function getColorKeyValuePairs(input, classNamePrefix = "", output = []) {
   if (typeof input === "object") {
-    Object.entries(input).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(input)) {
       getColorKeyValuePairs(
         value,
         classNamePrefix === "" ? key : `${classNamePrefix}-${key}`,
-        output
+        output,
       );
-    });
+    }
   } else {
     output.push([classNamePrefix, input]);
   }
@@ -115,13 +116,13 @@ const newClassNamePairs = [];
  * Populate `newClassNamePairs` with the values from `legacyKeyValuePairs` and
  * `newColorKeyValuePairs`.
  */
-legacyKeyValuePairs.forEach(([legacyPath, legacyValue]) => {
-  newColorKeyValuePairs.forEach(([newPath, newValue]) => {
+for (const [legacyPath, legacyValue] of legacyKeyValuePairs) {
+  for (const [newPath, newValue] of newColorKeyValuePairs) {
     if (legacyValue.toLowerCase() === newValue.toLowerCase()) {
       newClassNamePairs.push([legacyPath, newPath]);
     }
-  });
-});
+  }
+}
 
 /**
  * Create a JSON file that maps legacy color values to their new values. This
@@ -130,7 +131,7 @@ legacyKeyValuePairs.forEach(([legacyPath, legacyValue]) => {
 await fs.writeFile(
   path.join(__dirname, "tw-colors-map.json"),
   JSON.stringify(Object.fromEntries(newClassNamePairs.sort()), null, 2),
-  "utf8"
+  "utf8",
 );
 
 /**
@@ -149,7 +150,7 @@ const twClassNamePrefixes = ["text", "bg", "border"];
  * Loop over the Tailwind class name prefixes, building an object with our
  * legacy class names mapped to their new classname.
  */
-twClassNamePrefixes.forEach((classNamePrefix) => {
+for (const classNamePrefix of twClassNamePrefixes) {
   newColorClassNames = {
     ...newColorClassNames,
     ...newClassNamePairs.reduce((memo, item) => {
@@ -157,7 +158,7 @@ twClassNamePrefixes.forEach((classNamePrefix) => {
       return memo;
     }, {}),
   };
-});
+}
 
 /**
  * Create a JSON file with the old Tailwind class names mapped to their new
@@ -168,5 +169,5 @@ twClassNamePrefixes.forEach((classNamePrefix) => {
 await fs.writeFile(
   path.join(__dirname, "tw-classes-map.json"),
   JSON.stringify(newColorClassNames, null, 2),
-  "utf8"
+  "utf8",
 );
