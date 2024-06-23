@@ -4,16 +4,15 @@ description: "Foo Bar Baz"
 pubDate: "May 26 2024"
 ---
 
-While working on converting `create-react-app` codebase to one that uses
-Next.js, I found myself with an interesting problem: all of the Material Design
-based class names that were created using TailwindCSS had to be changed across
-1000+ React components. The "primary" color was `#f43f5e`. In the new code base,
-`#f43f53` was mapped to `red-500`. That meant that `text-primary-main` class was
-being replaced with `text-red-500`. With the Material Design class names being
-deprecated, a class like `text-primary-main` needed to be updated to its color
-specific class name, `text-red-500`.
+During a recent project of migrating a `create-react-app` codebase to Next.js, I
+faced an interesting challenge: updating Tailwind class names across 1000+ React
+components. Specifically, the Material Design-based class names needed to be
+replaced with new color-specific class names. For example, the
+`text-primary-main` class (mapped to `#f43f5e`) had to be changed to
+`text-red-500`.
 
-The "legacy" `tailwind.config.js` file had its colors set up like this:
+The legacy `tailwind.config.js` was configured with the Material Design colors
+like so:
 
 ```
 module.exports = {
@@ -39,7 +38,8 @@ module.exports = {
 }
 ```
 
-That newer config file, `tailwind.config.mjs`, is set up like this:
+The new configuration in `tailwind.config.mjs` provided a more comprehensive
+palette:
 
 ```
 export default {
@@ -78,73 +78,68 @@ export default {
 }
 ```
 
-The colors from the Material Design inspired legacy config file are still being
-used. They have been replaced with a palette that captures all of the hues for
-the base colors that previously made up the Material Design colors. This opens
-up the possiblity for using more colors without having to add a primary
-"lighter" option when a lighter red color than what `.text-primary-light` would
-provide is needed.
+With the expanded palette, it was essential to ensure accurate and efficient
+class name updates.
 
-This newly, expanded color palette presents a challenge: how do we update the
-classes of 1000+ React components to use the new Tailwind class names? How do we
-update `text-primary-main` and `bg-primary-main` to `text-red-500` and
-`bg-red-500`?
-
-Using Node.js, I will show you how to write a script that generates values from
-the two config files, outputting a JSON file that maps the old colors to the new
-ones. ======= ones, that looks like this:
-
-> > > > > > > 60be8c498dd23c7bb5d56a632b5b07df5313affa
+Using Node.js, I'll demonstrate how to create a script that extracts values from
+the two configuration files and generates a JSON file mapping old colors to new
+ones. This JSON file will look like this:
 
 ```
 {
-  // old color       : new color
+  // old class name  : new class name
   'text-primary-main': 'text-red-500'
 }
 ```
 
-Using that JSON, I can write a codemod that converts a class like
-`text-primary-main` to `text-red-500` for all React components.
+Using this JSON file, you can write a codemod to update all instances of the
+Material Design-inspired class names in your React components to those that
+follow the Tailwind color naming convention.
 
 Parsing tailwind.config.mjs
 
-How do we get the values from the Tailwind config files with Node.js?
-JSCodeShift.
+How can we extract the values from the Tailwind config files using Node.js? The
+answer is JSCodeShift.
 
-JSCodeShift is a library for writing "codemods". _Definition of codemod_. For
-this first step, I won't be using JSCodeShift to write a code mode. I will use
-JSCodeshift to parse the two config files, creating the JSON file that will be
-used to in the codemod.
+JSCodeShift is a library designed for writing "codemods". A codemod is an
+automated script used to refactor or modify code at scale, often across large
+codebases. It is commonly employed to update syntax, migrate libraries, or
+implement consistent coding standards efficiently. In this initial step, instead
+of using JSCodeShift to write a codemod, I will use it to parse the two config
+files and create the JSON file needed for the codemod that will update the React
+components.
 
-The script I will show was written to be ran with Node version 20. I was working
-with two different code bases in 2 separate folders, so I put this script into a
-folder that was a sibling to those folders. We will call this new folder
-`tailwind-codemod`, and run `npm init -y` to initialize it. Using `zsh`, I ran
-the following:
+The script I'll demonstrate is designed to run with Node version 20. Managing
+two separate codebases in different directories, I placed this script in a new
+folder adjacent to those directories, named `tailwind-codemod`, and initialized
+it using `npm init -y`. Using `zsh`, I executed the following commands:
 
 ```
 mkdir tailwind-codemod && cd $_
 npm init -y
 ```
 
-We need to install JSCodeshift.
+Next, I installed JSCodeshift:
 
 ```
-npm i jscodeshift
+npm i jscodeshift@^0.15.2 nopt
 ```
 
-Using Node version 20, I can use ECMAScript Modules, so I created `index.mjs`. I
-wanted to pass the two config files as CLI args to the script, like so:
+I used `jscodeshift@^0.15.2` when I originally wrote this script. When I tried
+using the latest version for this post, I ran into some issues. So `0.15.2` it
+is.
+
+To pass the two config files as command-line arguments to the script, I used:
 
 ```
 node index.mjs --legacy path/to/tailwind.legacy.js --updated path/to/tailwind.new.mjs
 ```
 
-Yes
+MAYBE DELETE THIS PARAGRAPH BELOW?
 
-While I have imported those files directly, writing Node CLI scripts is a fun
-hobby. By adding the `--legacy` and `--updated` CLI args, I get to lean into
-this a little bit.
+While I directly imported these files, crafting Node CLI scripts is a hobby I
+enjoy. Incorporating the `--legacy` and `--updated` CLI arguments adds an extra
+layer of functionality to this process.
 
 The entire contents of `tailwind-codemod/index.mjs` are below, and have been
 commented to explain each step.
@@ -200,7 +195,6 @@ function parseAstObjectProperties(colors, nodePath) {
  * values from it, adding them to the provided `colors` argument.
  */
 function getColorsFromAst(ast, colors) {
-  // biome-ignore lint/complexity/noForEach: ignore ast.forEach
   ast
     .find(j.Property, {
       key: {
@@ -329,15 +323,248 @@ A brief synopsis:
 
 - get the config files from the script arguments
 - use JSCodeshift to get the contents of `theme.colors`
-- create a "look up" object that allows me to map the old generated Tailwind
-  class names with the new class names
-- create a JSON file
+- create a "look up" object that allows me to map the old class names with the
+  new ones
+- create two JSON files, `tw-classes-map.json` and `tw-colors-map.json`
 
-I actually created two JSON files. There is `tw-classes-map.json`, which will be
-used to update the old class names to their newer counterparts. There is also
-`tw-colors-map.json`. This was used to help me spot check that my work of
-mapping the legacy class names to their new class names was correct.
+`tw-classes-map.json` will be used in the codemod that updates the old class
+names to their newer counterparts. The `tw-colors-map.json` is used to help spot
+check that the work of mapping the class names.
 
-- talk about `legacy` folder
-- write a script to analyze our usage of `className` in new code base.
+As mentioned earlier, this work was part of a re-platforming project for an
+existing web application. With a new repository at hand and numerous old files
+needing updates, manually verifying and updating each class name was overly
+cumbersome. However, directly migrating the old codebase into the `src`
+directory of the new codebase or applying the codemod to the active legacy
+codebase wasn't feasible.
+
+To solve this, we established a dedicated `legacy` folder within the new
+repository. This allowed us to selectively transfer significant portions of the
+legacy codebase and execute our codemod. Throughout the migration of features,
+the codemod significantly streamlined our tasks, eliminating one less concern
+from our checklist.
+
+If our classes were written like this, writing our codemod would be pretty
+straightforward.
+
+```
+className="flex w-full flex-col items-end rounded-lg border border-primary-main"
+```
+
+It is more reasonable to assume they look this:
+
+```
+className={cx(
+  className,
+  'flex w-full flex-col rounded-lg border border-primary-main'
+)}
+```
+
+And this:
+
+```
+className={active ? 'active' : ''}
+```
+
+There are a lot of expressions used to style our React components. We can use
+JSCodeShift to help us analyze our React components, generating a JSON and text
+file to see all of the different iterations. These files will help us to write
+our codemod that will update them.
+
+The entire contents of `tailwind-codemod/analysis.mjs` are below, and have been
+commented to explain each step.
+
+```
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import * as url from 'node:url';
+import parser from '@babel/parser';
+import j from 'jscodeshift';
+import nopt from "nopt";
+
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
+const { legacy } = nopt(
+  {
+    legacy: path,
+  },
+  {},
+  process.argv,
+  2,
+);
+
+const classNameAnalysis = {};
+let text = '';
+
+/**
+ * Recursively analyze the `className`s props for all of files that end with
+ * ".jsx" or ".tsx" in a directory. We want to see what kind of AST node types
+ * make up our `className` props. `className="action"` is a `StringLiteral` and
+ * `className={active ? 'active' : ''}` is a `ConditionalExpression`. Using
+ * JSCodeShift, we want to see what AST node types are used to create our
+ * `className` props. This will update the `classNameAnalysis` object to the following
+ * format:
+ *
+ * {
+ *   "ConditionalExpression": [ // AST node type
+ *     "className={active ? 'active' : ''}
+ *   ],
+ *   "LogicalExpression": [
+ *     "className={foo === 'foobar' && 'foo bar'}
+ *   ]
+ * }
+ */
+async function analyzeClassNames(sourcePath) {
+  const stats = await fs.stat(sourcePath);
+  const isSourcePathDir = stats.isDirectory();
+  const files = isSourcePathDir ? await fs.readdir(sourcePath) : [sourcePath];
+
+  for await (const fileName of files) {
+    const filePath = isSourcePathDir
+      ? path.join(sourcePath, fileName)
+      : fileName;
+    const stats = await fs.stat(filePath);
+
+    const isDir = stats.isDirectory();
+
+    if (isDir) {
+      await analyzeClassNames(filePath);
+    } else if (fileName.match(/(jsx|tsx)$/)) {
+      const source = await fs.readFile(filePath, 'utf8');
+
+      /**
+       * Use JSCodeShift to parse the file for the React component. Since we
+       * are parsing files that can have either JSX or TypeScript, we need to
+       * use the `@babel/parser` to help with parsing them.
+       */
+      const root = j(source, {
+        parser: {
+          parse: (code, options) =>
+            parser.parse(code, {
+              ...options,
+              tokens: true,
+              plugins: ['jsx', 'typescript'],
+            }),
+        },
+      });
+
+      /**
+       * Using `j.JSXAttribute`, we can target the `className` prop on all React
+       * components.
+       */
+      root
+        .find(j.JSXAttribute, {
+          name: {
+            name: 'className',
+          },
+        })
+        .forEach((path) => {
+          const { type } = path.value.value;
+
+          /**
+           * `StringLiteral` is for `className="foo"`. We know those exist so we'll skip
+           * them in our analysis.
+           */
+          if (type === 'StringLiteral') {
+            return;
+          }
+
+          if (!classNameAnalysis[type]) {
+            classNameAnalysis[type] = [];
+          }
+
+          /**
+           * A `JSXExpressionContainer` is used to embed expressions within JSX
+           * elements, like `className={isFoo ? 'foo' : 'bar baz'}`. This is
+           * what we want to analyze.
+           */
+          if (type === 'JSXExpressionContainer') {
+            if (Array.isArray(classNameAnalysis[type])) {
+              classNameAnalysis[type] = {};
+            }
+
+            const expressionType = path.node.value.expression.type;
+
+            if (!classNameAnalysis[type][expressionType]) {
+              classNameAnalysis[type][expressionType] = [];
+            }
+
+            const source = j(path.node).toSource();
+
+            if (
+              !classNameAnalysis[type][expressionType].find((item) => item === source)
+            ) {
+              classNameAnalysis[type][expressionType].push(source);
+            }
+          }
+        });
+    }
+  }
+}
+
+await analyzeClassNames(legacy);
+
+/**
+ * It can be helpful to see what the `className` prop looks like in the file
+ * itself. We can use the contents of our `classNameAnalysis` analysis object to
+ * create a `.txt` file that is more human-readable, like this:
+ *
+ * className={cx(
+ *   className,
+ *   'flex w-full flex-col rounded-lg border border-primary-main'
+ * )}
+ *
+ * className={active ? 'active' : ''}
+ *
+ */
+for (const className of classNameAnalysis) {
+  const data = classNameAnalysis[className];
+
+  if (Array.isArray(data)) {
+    for (const item of data) {
+      text += `\n\n${item}`;
+    }
+  } else {
+    for (const key of data) {
+      for (const item of data[key]) {
+        text += `\n\n${item}`;
+      }
+    }
+  }
+}
+
+await fs.writeFile(
+  path.join(__dirname, 'classNames-analysis.json'),
+  JSON.stringify(classNameAnalysis, null, ' '),
+  'utf8',
+);
+
+await fs.writeFile(
+  path.join(__dirname, 'classNames-analysis.txt'),
+  text,
+  'utf8',
+);
+```
+
+This script utilizes JSCodeShift more than the previous script. It is grabbing
+the `className` prop JSCodeShift's `JSXAttribute`, using the node path that
+represents the AST for `className`. Using the `type` of the node path, it can be
+determined what the node type for the `className` is, output in a JSON and
+`.txt` format to look at.
+
+Running this script against the `/legacy` folder I saw the different expressions
+used for the `className` prop:
+
+```
+CallExpression
+ConditionalExpression
+Identifier
+LogicalExpression
+MemberExpression
+OptionalMemberExpression
+TemplateLiteral
+```
+
+With this list, we know which type of expressions to target with our next
+codemod.
+
 - write a codemod that addresses all instances of updating class name
