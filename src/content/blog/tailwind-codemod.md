@@ -4,14 +4,14 @@ description: "Foo Bar Baz"
 pubDate: "May 26 2024"
 ---
 
-While working on a converting `create-react-app` codebase to one that uses
+While working on converting `create-react-app` codebase to one that uses
 Next.js, I found myself with an interesting problem: all of the Material Design
-based class names that were created using TailwindCSS had to be changed. The
-"primary" color was `#f43f5e`. In the new code base, `#f43f53` was mapped to
-`red-500`. That meant that `text-primary-main` class was being replaced with
-`text-red-500`. With the Material Design class names being deprecated, a class
-like `text-primary-main` needed to be updated to its color specific class name,
-`text-red-500`.
+based class names that were created using TailwindCSS had to be changed across
+1000+ React components. The "primary" color was `#f43f5e`. In the new code base,
+`#f43f53` was mapped to `red-500`. That meant that `text-primary-main` class was
+being replaced with `text-red-500`. With the Material Design class names being
+deprecated, a class like `text-primary-main` needed to be updated to its color
+specific class name, `text-red-500`.
 
 The "legacy" `tailwind.config.js` file had its colors set up like this:
 
@@ -92,7 +92,9 @@ update `text-primary-main` and `bg-primary-main` to `text-red-500` and
 
 Using Node.js, I will show you how to write a script that generates values from
 the two config files, outputting a JSON file that maps the old colors to the new
-ones.
+ones. ======= ones, that looks like this:
+
+> > > > > > > 60be8c498dd23c7bb5d56a632b5b07df5313affa
 
 ```
 {
