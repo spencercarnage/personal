@@ -1,23 +1,27 @@
 ---
 title: "Tailwind Codemod"
 description: "Foo Bar Baz"
-pubDate: "May 26 2024"
+pubDate: "July 26 2024"
 ---
 
 During a recent project of migrating a `create-react-app` code base to Next.js,
 I faced an interesting challenge: updating Tailwind class names across 1000+
 React components.
 
-The legacy code base used a Material Design-based convention for naming classes,
-resulting in class names like `bg-primary-light` and `bg-primary-main`. Those
-class names need to be updated to color-specific class names like `bg-blue-200`
-and `bg-blue-500`. Changing these by hand is time consuming and quite a drudge.
+The legacy code base used a [Material Design](https://m2.material.io/design/color/the-color-system.html)-based convention for naming classes.
+This resulted in class names like `bg-primary-light` and `bg-primary-main`.
+These class names had to be updated to a new color-specific class naming convention like `bg-blue-200` and `bg-blue-500`. Changing these by hand would be time consuming and 
+tedious.
 
 This post outlines the steps I took to update Tailwind class names across 1000+
-React components using Node.js and JSCodeShift. I will outline the various steps
-I took analyzing then updating the code base. These examples will be using the
-latest version of Node.js, version 22.
+React components using Node.js and jscodeshift. I will outline the various steps
+I took for both analyzing and updating the code base. 
 
+These examples will be using the latest version of Node.js, version 22.
+
+## Something Here
+
+Before diving in, it is important to evaluate if a codemod is the right tool.
 Using codemods to make large scale changes across your code base can be game
 changing for your producivity. It can also sink that productivity as well. When
 starting a project like this, you need to ask some very important questions:
@@ -41,10 +45,13 @@ that went into writing codemods. While it took a few days to accomplish, it was
 worth it. By the end of this post, I hope you feel empowered to make a similar
 choice when the opportunity presents itself to you.
 
-Like most React applications that use Tailwind, we had a `tailwind.config.js`
-CommonJS file that was configured with the Material Design colors like so:
+## Analyzing the Tailwind Config Files
 
-```
+Like most React applications that use Tailwind, we had a `tailwind.config.js`
+CommonJS file that was configured with a Material Design-based convention for
+class naming:
+
+```js
 module.exports = {
   theme: {
     colors: {
@@ -66,10 +73,13 @@ module.exports = {
 }
 ```
 
-The new application had a `tailwind.config.mjs` ESM file that provided a more
-comprehensive palette:
+While sufficient for most use cases, there were limitations that this naming
+convention introduced. Need a color lighter than `primary-light`? Hello,
+`primary-lighter`. The new application had a `tailwind.config.mjs` ESM file that 
+provided a more comprehensive palette that you would typically see in a code
+base that uses Tailwind:
 
-```
+```js
 export default {
   theme: {
     colors: {
@@ -104,82 +114,79 @@ export default {
 }
 ```
 
-I needed a way to map the class names that would be generated from the legacy
-config with those from the new config. Using Node, we can create a JSON file
-that looks like this:
+We needed a way to map the class names that would be generated from the legacy
+config with those from the new config. Using Node, we can examine both config
+files, creating a JSON file that be can used in the codemod to update the old
+class names.
 
-```
+```json
 {
   // old class name  : new class name
   'text-primary-main': 'text-red-500'
 }
 ```
 
-This JSON file will be used by the codemod to rewrite the React components that
-are being ported over from the legacy application.
+## Parsing the Tailwind Config Files
 
-## Parsing Tailwind Config Files
+How can we extract the values from the Tailwind config files using Node.js? [With
+jscodeshift](https://github.com/facebook/jscodeshift).
 
-How can we extract the values from the Tailwind config files using Node.js? With
-JSCodeShift.
-
-JSCodeShift is a library designed for writing "codemods". A codemod is an
+jscodeshift is a library designed for writing "codemods". A codemod is an
 automated script used to refactor or modify code at scale, often across large
 code bases. It is commonly employed to update syntax, migrate libraries, or
 implement consistent coding standards efficiently. In this initial step, instead
-of using JSCodeShift to write a codemod, I will use it to parse the two config
+of using jscodeshift to write a codemod, I will use it to parse the two config
 files and create the JSON file needed for the codemod that will update the React
 components.
 
 With two separate code bases in different directories, I placed this script in a
-new folder adjacent to those directories, named `tailwind-codemod`. After
-initializing the script with `npm init -y` I used `zsh` to execute the following
-commands:
+new folder adjacent to them, named `tailwind-codemod`. Next, I created a new npm 
+package, installed jscodeshift, and created a `analyzeConfigs.mjs` file for my script:
 
 ```
-mkdir tailwind-codemod && cd $_
+mkdir tailwind-codemod
+cd tailwind-codemod
 npm init -y
-```
-
-Next, I installed JSCodeshift and created a `index.mjs` file for my script:
-
-```
 npm i jscodeshift@^0.15.2
-touch index.mjs
+touch analyzeConfigs.mjs
 ```
 
 I used `jscodeshift@^0.15.2` when I originally wrote this script. When I tried
 using the latest version for this post, I ran into some issues. I do not recall
 what those issues were so `0.15.2` it is.
 
-My intent is to write a script that I can pass the paths of the two code bases
-to as arguments. This script then outputs a JSON file into my `tailwind-codemod`
+My intent is to write a script that I can pass the paths of both code bases
+as arguments. This script then outputs a JSON file into my `tailwind-codemod`
 directory.
 
 ```
-node index.mjs --legacy path/to/tailwind.legacy.js --updated path/to/tailwind.new.mjs
+node analyzeConfigs.mjs --legacy path/to/tailwind.config.js --updated path/to/tailwind.config.mjs
 ```
 
-The contents of `tailwind-codemod/index.mjs` are below, and have been commented
+The contents of `tailwind-codemod/analyzeConfigs.mjs` are below, and have been commented
 to explain each step.
 
-```
+```js
 import fs from "node:fs/promises";
 import path from "node:path";
 import * as url from "node:url";
+import { parseArgs } from "node:util";
 import j from "jscodeshift";
-import nopt from "nopt";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
-const { legacy, updated } = nopt(
-  {
-    legacy: path,
-    updated: path,
+
+const {
+  values: { legacy, updated },
+} = parseArgs({
+  options: {
+    legacy: {
+      type: "string",
+    },
+    updated: {
+      type: "string",
+    },
   },
-  {},
-  process.argv,
-  2,
-);
+});
 
 /**
  * These objects will be used to look up the colors from each
@@ -196,23 +203,26 @@ const legacyAst = j(await fs.readFile(legacy, "utf8"));
 const newAst = j(await fs.readFile(updated, "utf8"));
 
 /**
- * Recursively parses the key / value pairs on an object node path, updating
- * the `colors` argument with the same shape as the node path's AST.
+ * Recursively parses the key / value pairs on an object node
+ * path, updating the `colors` argument with the same structure as 
+ * the Tailwind config.
  */
 function parseAstObjectProperties(colors, nodePath) {
   if (nodePath.value.type === "Literal") {
     /**
-     * The legacy config is using strings for keys and the new config has both
-     * strings and numbers for keys. When a key is a string, we can get the key
-     * using `nodePath.key.name`. A number is a literal, and the parsed key node
-     * path does not have a `nodePath.key.name`; it has `nodePath.key.value`.
+     * The legacy config is using strings for keys and the new 
+     * config has both strings and numbers for keys. When a key 
+     * is a string, we can get the key using `nodePath.key.name`. 
+     * A number is a literal, and the parsed key node path does 
+     * not have a `nodePath.key.name`; it has `nodePath.key.value`.
      */
     colors[nodePath.key.name || nodePath.key.value] = nodePath.value.value;
   } else if (nodePath.value.type === "ObjectExpression") {
     /**
-     * We have a key with a value that is an an object (such as `theme.colors.primary`)
-     * so let's create a new key on our `colors` using the key. This allows us to
-     * capture the nested values, such as `light`, `main`, `dark`, etc.
+     * We have a key with a value that is an an object (such 
+     * as `theme.colors.primary`) so let's create a new key on 
+     * `colors` using the key. This allows us to capture the 
+     * nested values, such as `light`, `main`, `dark`, etc.
      */
     colors[nodePath.key.name || nodePath.key.value] = {};
 
@@ -223,8 +233,9 @@ function parseAstObjectProperties(colors, nodePath) {
 }
 
 /**
- * Looks for the "colors" key on the config's ast, and then grabs the key
- * values from it, adding them to the provided `colors` argument.
+ * Looks for the "colors" key on the config's ast, and then 
+ * grabs the key values from it, adding them to the provided 
+ * `colors` argument.
  */
 function getColorsFromAst(ast, colors) {
   ast
@@ -244,9 +255,10 @@ getColorsFromAst(legacyAst, legacyColors);
 getColorsFromAst(newAst, newColors);
 
 /**
- * Utilty function for parsing the tailwind config values into object key /
- * value pairs, [['key', 'value']], in a recursive manner. The path of nested
- * objects are used to create the key.
+ * Utilty function for parsing the tailwind config values 
+ * into object key / value pairs, [['key', 'value']], in a 
+ * recursive manner. The path of nested objects are used to 
+ * create the key.
  *
  * This:
  *
@@ -288,8 +300,8 @@ const newColorKeyValuePairs = getColorKeyValuePairs(newColors);
 const newClassNamePairs = [];
 
 /**
- * Populate `newClassNamePairs` with the values from `legacyKeyValuePairs` and
- * `newColorKeyValuePairs`.
+ * Populate `newClassNamePairs` with the values from `legacyKeyValuePairs` 
+ * and `newColorKeyValuePairs`.
  */
 for (const [legacyPath, legacyValue] of legacyKeyValuePairs) {
   for (const [newPath, newValue] of newColorKeyValuePairs) {
@@ -300,8 +312,8 @@ for (const [legacyPath, legacyValue] of legacyKeyValuePairs) {
 }
 
 /**
- * Create a JSON file that maps legacy color values to their new values. This
- * JSON file is only used to spot check our work.
+ * Create a JSON file that maps legacy color values to their 
+ * new values. This JSON file is only used to spot check our work.
  */
 await fs.writeFile(
   path.join(__dirname, "tw-colors-map.json"),
@@ -310,11 +322,12 @@ await fs.writeFile(
 );
 
 /**
- * This will hold the class names tailwind automatically creates for us using
- * the colors we provide it. So the `primary` color becomes `text-primary-main`,
- * `bg-primary-main`, `border-primary-main`. We want to map the legacy colors to
- * what their new class names will be, with the legacy class name as the key,
- * and the updated class name as the value.
+ * This will hold the class names tailwind automatically creates 
+ * for us using the colors we provide it. So the `primary` color 
+ * becomes `text-primary-main`, `bg-primary-main`, `border-primary-main`. 
+ * We want to map the legacy colors to what their new class names 
+ * will be, with the legacy class name as the key, and the updated 
+ * class name as the value.
  *
  * { "text-primary-main": "text-red-100" }
  */
@@ -322,8 +335,8 @@ let newColorClassNames = {};
 const twClassNamePrefixes = ["text", "bg", "border"];
 
 /**
- * Loop over the Tailwind class name prefixes, building an object with our
- * legacy class names mapped to their new classname.
+ * Loop over the Tailwind class name prefixes, building an object 
+ * with our legacy class names mapped to their new classname.
  */
 for (const classNamePrefix of twClassNamePrefixes) {
   newColorClassNames = {
@@ -336,10 +349,10 @@ for (const classNamePrefix of twClassNamePrefixes) {
 }
 
 /**
- * Create a JSON file with the old Tailwind class names mapped to their new
- * class names. We will use this JSON file when doing the transform that will
- * update our React components, replacing the old legacy names with the new
- * ones.
+ * Create a JSON file with the old Tailwind class names mapped 
+ * to their new class names. We will use this JSON file when doing 
+ * the transform that will update our React components, replacing 
+ * the old legacy names with the new ones.
  */
 await fs.writeFile(
   path.join(__dirname, "tw-classes-map.json"),
@@ -353,7 +366,7 @@ A brief synopsis:
 - get the config files from the script arguments
 - create a "look up" object that allows you to map the old class names with the
   new ones
-- use JSCodeshift to get the contents of `theme.colors` from those config files
+- use jscodeshift to get the contents of `theme.colors` from those config files
 - take the values from the "look up" objects and map them to two JSON files,
   `tw-classes-map.json` and `tw-colors-map.json`
 
@@ -364,7 +377,7 @@ spot check that `primary-main` was correctly mapped to `red-500`. This helped me
 to check my work. `tw-classes-map.json` has the actual classes that we want to
 migrate in the code base:
 
-```
+```js
 {
   "text-black": "text-black",
   "text-primary-dark": "text-red-900",
@@ -393,13 +406,13 @@ from our checklist.
 If our classes were written like this, writing our codemod would be pretty
 straightforward:
 
-```
+```js
 className="flex w-full flex-col items-end rounded-lg border border-primary-main"
 ```
 
 It is more reasonable to assume they look this:
 
-```
+```js
 className={cx(
   className,
   'flex w-full flex-col rounded-lg border border-primary-main'
@@ -408,47 +421,50 @@ className={cx(
 
 And this:
 
-```
+```js
 className={active ? 'active' : ''}
 ```
 
 There are a lot of expressions used to style our React components. We can use
-JSCodeShift to help us analyze our React components, generating a JSON and text
+jscodeshift to help us analyze our React components, generating a JSON and text
 file to see all of the different iterations. These files will help us to write
 our codemod that will update them.
 
-With this approach, we can create `tailwind-codemod/analysis.mjs`. Here are the
-contents of `tailwind-codemod/analysis.mjs` commented to explain each step:
+With this approach, we can create `tailwind-codemod/analyzeClassNames.mjs`. Here are the
+contents of `tailwind-codemod/analyzeClassNames.mjs` commented to explain each step:
 
-```
+```js
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import * as url from 'node:url';
+import { parseArgs } from "node:util";
 import parser from '@babel/parser';
 import j from 'jscodeshift';
-import nopt from "nopt";
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
-const { legacy } = nopt(
-  {
-    legacy: path,
+
+const {
+  values: { legacy },
+} = parseArgs({
+  options: {
+    legacy: {
+      type: "string",
+    },
   },
-  {},
-  process.argv,
-  2,
-);
+});
 
 const classNameAnalysis = {};
 let text = '';
 
 /**
- * Recursively analyze the `className`s props for all of files that end with
- * ".jsx" or ".tsx" in a directory. We want to see what kind of AST node types
- * make up our `className` props. `className="action"` is a `StringLiteral` and
- * `className={active ? 'active' : ''}` is a `ConditionalExpression`. Using
- * JSCodeShift, we want to see what AST node types are used to create our
- * `className` props. This will update the `classNameAnalysis` object to the following
- * format:
+ * Recursively analyze the `className`s props for all of 
+ * files that end with ".jsx" or ".tsx" in a directory. 
+ * We want to see what kind of AST node types make up our
+ * `className` props. `className="action"` is a `StringLiteral`
+ * and `className={active ? 'active' : ''}` is a `ConditionalExpression`. 
+ * Using jscodeshift, we want to see what AST node types are 
+ * used to create our `className` props. This will update the 
+ * `classNameAnalysis` object to the following format:
  *
  * {
  *   "ConditionalExpression": [ // AST node type
@@ -478,9 +494,10 @@ async function analyzeClassNames(sourcePath) {
       const source = await fs.readFile(filePath, 'utf8');
 
       /**
-       * Use JSCodeShift to parse the file for the React component. Since we
-       * are parsing files that can have either JSX or TypeScript, we need to
-       * use the `@babel/parser` to help with parsing them.
+       * Use jscodeshift to parse the file for the React 
+       * component. Since we are parsing files that can 
+       * have either JSX or TypeScript, we need to use the 
+       * `@babel/parser` to help with parsing them.
        */
       const root = j(source, {
         parser: {
@@ -494,8 +511,8 @@ async function analyzeClassNames(sourcePath) {
       });
 
       /**
-       * Using `j.JSXAttribute`, we can target the `className` prop on all React
-       * components.
+       * Using `j.JSXAttribute`, we can target the `className` 
+       * prop on all React components.
        */
       root
         .find(j.JSXAttribute, {
@@ -507,8 +524,8 @@ async function analyzeClassNames(sourcePath) {
           const { type } = path.value.value;
 
           /**
-           * `StringLiteral` is for `className="foo"`. We know those exist so we'll skip
-           * them in our analysis.
+           * `StringLiteral` is for `className="foo"`.  * We 
+           * know those exist so we'll skip * them in our analysis.
            */
           if (type === 'StringLiteral') {
             return;
@@ -519,9 +536,9 @@ async function analyzeClassNames(sourcePath) {
           }
 
           /**
-           * A `JSXExpressionContainer` is used to embed expressions within JSX
-           * elements, like `className={isFoo ? 'foo' : 'bar baz'}`. This is
-           * what we want to analyze.
+           * A `JSXExpressionContainer` is used to embed expressions 
+           * within JSX elements, like `className={isFoo ? 'foo' : 'bar baz'}`. 
+           * This is what we want to analyze.
            */
           if (type === 'JSXExpressionContainer') {
             if (Array.isArray(classNameAnalysis[type])) {
@@ -591,8 +608,8 @@ await fs.writeFile(
 );
 ```
 
-This script utilizes JSCodeShift more than the previous script. It is grabbing
-the `className` prop with JSCodeShift's `JSXAttribute`, using the node path that
+This script utilizes jscodeshift more than the previous script. It is grabbing
+the `className` prop with jscodeshift's `JSXAttribute`, using the node path that
 represents the AST for `className`. Using the `type` of the node path, it can be
 determined what the node type for the `className` is, output in a JSON and
 `.txt` format to look at.
@@ -603,14 +620,224 @@ used for the `className` prop:
 ```
 CallExpression
 ConditionalExpression
-Identifier
 LogicalExpression
-MemberExpression
-OptionalMemberExpression
 TemplateLiteral
 ```
 
-With this list, we know which type of expressions to target with our next
-codemod.
+This is a truncated list. A mature code base will probably have much more. For
+this post, this list will be suffice.
 
-- write a codemod that addresses all instances of updating class name
+With this list, we can write a codemod that addresses these use cases. In the
+`tailwind-codemod` folder, we can create `transform.mjs` with the following
+content:
+
+```js
+import classLookUp from "./tw-classes-map.json";
+
+/**
+ * Create a regular expression from all of the keys on the
+ * look up object created to map the legacy classes with the
+ * newer class names. Probably a more efficient way of doing
+ * this. :)
+ */
+const classNamesRE = new RegExp(
+  `\\b(?:${Object.keys(classLookUp).join("|")})\\b`,
+  "g",
+);
+
+/**
+ * Take a `value` from AST node path and check it for a legacy
+ * class name. If there is a match, use the class look up to
+ * swap the legacy class name with the updated class name.
+ */
+function matchClassName(value) {
+  if (!value) {
+    return false;
+  }
+
+  try {
+    const matches = [];
+    let newValue = value;
+
+    // Use the regular expression to find matches
+    let match;
+
+    while ((match = classNamesRE.exec(value)) !== null) {
+      matches.push(match[0]);
+    }
+
+    if (matches.length) {
+      for (const match of matches) {
+        newValue = value.replace(match, classLookUp[match]);
+      }
+
+      return newValue;
+    }
+  } catch (e) {
+    console.log("error", e);
+  }
+}
+
+/* Allow for parsing Typescript files. */
+export const parser = "tsx";
+
+/* This is where the transform starts. */
+export default (file, api) => {
+  /**
+   * Alias the jscodeshift API
+   */
+  const j = api.jscodeshift;
+
+  /**
+   * Parse the code into an AST
+   */
+  const root = j(file.source);
+
+  /**
+   * Find all JSX attributes that are `className` and then iterate
+   * over them.
+   */
+  root
+    .find(j.JSXAttribute, {
+      name: {
+        name: "className",
+      },
+    })
+    .forEach((path) => {
+      const { value } = path.value;
+
+      /* className="text-primary-main bg-primary-light" */
+      if (value.type === "StringLiteral") {
+        const newValue = matchClassName(value.value);
+
+        if (newValue) {
+          value.value = newValue;
+        }
+      }
+
+      /* className={ ... } */
+      if (value.type === "JSXExpressionContainer") {
+        switch (value.expression.type) {
+          /* className={fn( ... )} */
+          case "CallExpression":
+            for (const arg of value.expression.arguments) {
+              if (arg.type === "StringLiteral") {
+                const newValue = matchClassName(arg.value);
+
+                if (newValue) {
+                  arg.value = newValue;
+                }
+              }
+
+              /* className={cx("text-primary-main", {"bg-primary-dark": isActive})} */
+              if (arg.type === "ObjectExpression") {
+                for (const property of arg.properties) {
+                  const newValue = matchClassName(property?.key?.value);
+
+                  if (newValue) {
+                    property.key.value = newValue;
+                  }
+                }
+              }
+            }
+            break;
+
+          /* className={isActive && "text-primary-dark"} */
+          case "LogicalExpression":
+            for (const side of [
+              value.expression.left,
+              value.expression.right,
+            ]) {
+              if (side.type === "StringLiteral") {
+                const newValue = matchClassName(side.value);
+
+                if (newValue) {
+                  side.value = newValue;
+                }
+              }
+            }
+            break;
+
+          /*  className={isActive ? "text-primary-light" : "text-primary-main"} */
+          case "ConditionalExpression":
+            if (value.expression.consequent.type === "StringLiteral") {
+              const newValue = matchClassName(
+                value.expression.consequent.value,
+              );
+
+              if (newValue) {
+                value.expression.consequent.value = newValue;
+              }
+            }
+
+            if (value.expression.alternate.type === "StringLiteral") {
+              const newValue = matchClassName(value.expression.alternate.value);
+
+              if (newValue) {
+                value.expression.alternate.value = newValue;
+              }
+            }
+
+            break;
+
+          /* className={`${className} text-primary-dark`} */
+          case "TemplateLiteral":
+            for (const quasisValue of value.expression.quasis) {
+              const newValue = matchClassName(quasisValue.value.raw);
+
+              if (newValue) {
+                quasisValue.value.raw = newValue;
+              }
+            }
+            break;
+        }
+      }
+    });
+
+  /**
+   * Use jscodeshift to update the contents of the file.
+   */
+  return root.toSource();
+};
+```
+
+A brief synopsis of this is file is:
+
+- import our JSON look up and turn it into a regular expression
+- find all `className` attributes in a file's JSX
+- update `className` attributes that match the type of `CallExpression`, `ConditionalExpression`, `LogicalExpression` or `TemplateLiteral` with the updated class name
+
+We run our transform in "dry" mode (which will not make any changes) with the 
+following command:
+
+```
+npx jscodeshift@0.15.2 -t path/to/transform.mjs path/to/dir -d
+```
+
+That will show the following output in your terminal:
+
+```
+Processing 1 files...
+Spawning 1 workers...
+Running in dry mode, no files will be written!
+Sending 1 files to free worker...
+All done.
+Results:
+0 errors
+1 unmodified
+0 skipped
+0 ok
+Time elapsed: 0.282seconds
+```
+
+When you are ready to run the transform, experiment with only running it against
+a single file or directory. Run `git diff` on the updated file to see the output, 
+spot checking what the transform does. You will find use cases that you did not
+consider. The transform code above does not cover all of the edge cases for the
+4 types that are being targeted. 
+
+In the tech sector's current climate, engineers are being asked to do more with
+less. Codemods are great tools to help with that. While it will take some time to
+master them, you are picking up a new skill that will make you a force multiplier.
+The next time you have to make an update that spans many files, look into
+writing a codemod for making that change.

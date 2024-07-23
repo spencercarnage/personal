@@ -11,7 +11,6 @@
   "license": "ISC",
   "dependencies": {
     "classnames": "^2.5.1",
-    "jscodeshift": "^0.15.2",
-    "nopt": "^7.2.0"
+    "jscodeshift": "^0.15.2"
   }
 }

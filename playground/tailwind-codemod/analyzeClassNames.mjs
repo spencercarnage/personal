@@ -1,22 +1,23 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import * as url from 'node:url';
-import parser from '@babel/parser';
-import j from 'jscodeshift';
-import nopt from "nopt";
+import fs from "node:fs/promises";
+import path from "node:path";
+import * as url from "node:url";
+import { parseArgs } from "node:util";
+import parser from "@babel/parser";
+import j from "jscodeshift";
 
-const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
-const { legacy } = nopt(
-  {
-    legacy: path,
+const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
+const {
+  values: { legacy },
+} = parseArgs({
+  options: {
+    legacy: {
+      type: "string",
+    },
   },
-  {},
-  process.argv,
-  2,
-);
+});
 
 const classNameAnalysis = {};
-let text = '';
+let text = "";
 
 /**
  * Recursively analyze the `className`s props for all of files that end with
@@ -28,7 +29,7 @@ let text = '';
  * format:
  *
  * {
- *   "ConditionalExpression": [ // AST node type 
+ *   "ConditionalExpression": [ // AST node type
  *     "className={active ? 'active' : ''}
  *   ],
  *   "LogicalExpression": [
@@ -52,7 +53,7 @@ async function analyzeClassNames(sourcePath) {
     if (isDir) {
       await analyzeClassNames(filePath);
     } else if (fileName.match(/(jsx|tsx)$/)) {
-      const source = await fs.readFile(filePath, 'utf8');
+      const source = await fs.readFile(filePath, "utf8");
 
       /**
        * Use JSCodeShift to parse the file for the React component. Since we
@@ -65,7 +66,7 @@ async function analyzeClassNames(sourcePath) {
             parser.parse(code, {
               ...options,
               tokens: true,
-              plugins: ['jsx', 'typescript'],
+              plugins: ["jsx", "typescript"],
             }),
         },
       });
@@ -79,22 +80,18 @@ async function analyzeClassNames(sourcePath) {
       root
         .find(j.JSXAttribute, {
           name: {
-            name: 'className',
+            name: "className",
           },
         })
         .forEach((path) => {
           const { type } = path.value.value;
 
           /**
-           * `StringLiteral` is for `className="foo"`. We know those exist so we'll skip 
+           * `StringLiteral` is for `className="foo"`. We know those exist so we'll skip
            * them in our analysis.
            */
-          if (type === 'StringLiteral') {
+          if (type === "StringLiteral") {
             return;
-          }
-
-          if (!classNameAnalysis[type]) {
-            classNameAnalysis[type] = [];
           }
 
           /**
@@ -102,23 +99,19 @@ async function analyzeClassNames(sourcePath) {
            * elements, like `className={isFoo ? 'foo' : 'bar baz'}`. This is
            * what we want to analyze.
            */
-          if (type === 'JSXExpressionContainer') {
-            if (Array.isArray(classNameAnalysis[type])) {
-              classNameAnalysis[type] = {};
-            }
-
+          if (type === "JSXExpressionContainer") {
             const expressionType = path.node.value.expression.type;
 
-            if (!classNameAnalysis[type][expressionType]) {
-              classNameAnalysis[type][expressionType] = [];
+            if (!Array.isArray(classNameAnalysis[expressionType])) {
+              classNameAnalysis[expressionType] = [];
             }
 
             const source = j(path.node).toSource();
 
             if (
-              !classNameAnalysis[type][expressionType].find((item) => item === source)
+              !classNameAnalysis[expressionType].find((item) => item === source)
             ) {
-              classNameAnalysis[type][expressionType].push(source);
+              classNameAnalysis[expressionType].push(source);
             }
           }
         });
@@ -127,7 +120,6 @@ async function analyzeClassNames(sourcePath) {
 }
 
 await analyzeClassNames(legacy);
-// await analyzeClassNames(path.join(__dirname, '../../legacy'));
 
 /**
  * It can be helpful to see what the `className` prop looks like in the file
@@ -142,7 +134,7 @@ await analyzeClassNames(legacy);
  * className={active ? 'active' : ''}
  *
  */
-for (const className of classNameAnalysis) {
+for (const className in classNameAnalysis) {
   const data = classNameAnalysis[className];
 
   if (Array.isArray(data)) {
@@ -159,13 +151,13 @@ for (const className of classNameAnalysis) {
 }
 
 await fs.writeFile(
-  path.join(__dirname, 'classNames-analysis.json'),
-  JSON.stringify(classNameAnalysis, null, ' '),
-  'utf8',
+  path.join(__dirname, "classNames-analysis.json"),
+  JSON.stringify(classNameAnalysis, null, " "),
+  "utf8",
 );
 
 await fs.writeFile(
-  path.join(__dirname, 'classNames-analysis.txt'),
+  path.join(__dirname, "classNames-analysis.txt"),
   text,
-  'utf8',
+  "utf8",
 );
