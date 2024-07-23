@@ -1,19 +1,23 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { argv } from "node:process";
 import * as url from "node:url";
+import { parseArgs } from "node:util";
 import j from "jscodeshift";
-import nopt from "nopt";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
-const { legacy, updated } = nopt(
-  {
-    legacy: path,
-    updated: path,
+const {
+  values: { legacy, updated },
+} = parseArgs({
+  options: {
+    legacy: {
+      type: "string",
+    },
+    updated: {
+      type: "string",
+    },
   },
-  {},
-  process.argv,
-  2,
-);
+});
 
 /**
  * Convert both tailwind config files into abstract syntax trees.

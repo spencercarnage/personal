@@ -81,10 +81,6 @@
     all: unset;
   }
 
-  p {
-    max-width: 50ch;
-  }
-
   blockquote {
     border: 1px solid #353745;
     color: #c4c4c8;
