@@ -4,15 +4,45 @@ description: "Foo Bar Baz"
 pubDate: "May 26 2024"
 ---
 
-During a recent project of migrating a `create-react-app` codebase to Next.js, I
-faced an interesting challenge: updating Tailwind class names across 1000+ React
-components. Specifically, the Material Design-based class names needed to be
-replaced with new color-specific class names. For example, the
-`text-primary-main` class (mapped to `#f43f5e`) had to be changed to
-`text-red-500`.
+During a recent project of migrating a `create-react-app` code base to Next.js,
+I faced an interesting challenge: updating Tailwind class names across 1000+
+React components.
 
-The legacy `tailwind.config.js` was configured with the Material Design colors
-like so:
+The legacy code base used a Material Design-based convention for naming classes,
+resulting in class names like `bg-primary-light` and `bg-primary-main`. Those
+class names need to be updated to color-specific class names like `bg-blue-200`
+and `bg-blue-500`. Changing these by hand is time consuming and quite a drudge.
+
+This post outlines the steps I took to update Tailwind class names across 1000+
+React components using Node.js and JSCodeShift. I will outline the various steps
+I took analyzing then updating the code base. These examples will be using the
+latest version of Node.js, version 22.
+
+Using codemods to make large scale changes across your code base can be game
+changing for your producivity. It can also sink that productivity as well. When
+starting a project like this, you need to ask some very important questions:
+
+1. How many files need to be updated?
+2. Is it worth putting in the time it takes to learn a new tool to make these
+   changes? Or will it be quicker to make the changes manually, even making the
+   changes manually is more tedious?
+3. How easily is it for you to test that the codemod made the updates as you
+   intended? How easy is it to undo the changes?
+
+This list is by no means an exhaustive one but it highlights that challenges,
+and potential dangers, that come up when using a powerful tool like a codemod.
+
+For my specific use case, this was a complete rewrite of an existing application
+that was months away from having any external users. The design of the
+application was going to stay the way but the Tailwind classes that powered that
+design was going to change. I had success in the past with making large scale
+changes in the legacy code base, so I had already tackled the learning curve
+that went into writing codemods. While it took a few days to accomplish, it was
+worth it. By the end of this post, I hope you feel empowered to make a similar
+choice when the opportunity presents itself to you.
+
+Like most React applications that use Tailwind, we had a `tailwind.config.js`
+CommonJS file that was configured with the Material Design colors like so:
 
 ```
 module.exports = {
@@ -29,17 +59,15 @@ module.exports = {
         "main": "#3b82f6",
         "dark": "#1e3a8a"
       },
-      // info
-      // success
-      // etc.
+      // info, success, etc
     },
   },
   ...
 }
 ```
 
-The new configuration in `tailwind.config.mjs` provided a more comprehensive
-palette:
+The new application had a `tailwind.config.mjs` ESM file that provided a more
+comprehensive palette:
 
 ```
 export default {
@@ -70,20 +98,15 @@ export default {
         "800": "#1e40af",
         "900": "#1e3a8a"  // secondary.dark
       },
-      // info
-      // success
-      // etc.
+      // info, success, etc,
     }
   }
 }
 ```
 
-With the expanded palette, it was essential to ensure accurate and efficient
-class name updates.
-
-Using Node.js, I'll demonstrate how to create a script that extracts values from
-the two configuration files and generates a JSON file mapping old colors to new
-ones. This JSON file will look like this:
+I needed a way to map the class names that would be generated from the legacy
+config with those from the new config. Using Node, we can create a JSON file
+that looks like this:
 
 ```
 {
@@ -92,57 +115,53 @@ ones. This JSON file will look like this:
 }
 ```
 
-Using this JSON file, you can write a codemod to update all instances of the
-Material Design-inspired class names in your React components to those that
-follow the Tailwind color naming convention.
+This JSON file will be used by the codemod to rewrite the React components that
+are being ported over from the legacy application.
 
-Parsing tailwind.config.mjs
+## Parsing Tailwind Config Files
 
-How can we extract the values from the Tailwind config files using Node.js? The
-answer is JSCodeShift.
+How can we extract the values from the Tailwind config files using Node.js? With
+JSCodeShift.
 
 JSCodeShift is a library designed for writing "codemods". A codemod is an
 automated script used to refactor or modify code at scale, often across large
-codebases. It is commonly employed to update syntax, migrate libraries, or
+code bases. It is commonly employed to update syntax, migrate libraries, or
 implement consistent coding standards efficiently. In this initial step, instead
 of using JSCodeShift to write a codemod, I will use it to parse the two config
 files and create the JSON file needed for the codemod that will update the React
 components.
 
-The script I'll demonstrate is designed to run with Node version 20. Managing
-two separate codebases in different directories, I placed this script in a new
-folder adjacent to those directories, named `tailwind-codemod`, and initialized
-it using `npm init -y`. Using `zsh`, I executed the following commands:
+With two separate code bases in different directories, I placed this script in a
+new folder adjacent to those directories, named `tailwind-codemod`. After
+initializing the script with `npm init -y` I used `zsh` to execute the following
+commands:
 
 ```
 mkdir tailwind-codemod && cd $_
 npm init -y
 ```
 
-Next, I installed JSCodeshift:
+Next, I installed JSCodeshift and created a `index.mjs` file for my script:
 
 ```
-npm i jscodeshift@^0.15.2 nopt
+npm i jscodeshift@^0.15.2
+touch index.mjs
 ```
 
 I used `jscodeshift@^0.15.2` when I originally wrote this script. When I tried
-using the latest version for this post, I ran into some issues. So `0.15.2` it
-is.
+using the latest version for this post, I ran into some issues. I do not recall
+what those issues were so `0.15.2` it is.
 
-To pass the two config files as command-line arguments to the script, I used:
+My intent is to write a script that I can pass the paths of the two code bases
+to as arguments. This script then outputs a JSON file into my `tailwind-codemod`
+directory.
 
 ```
 node index.mjs --legacy path/to/tailwind.legacy.js --updated path/to/tailwind.new.mjs
 ```
 
-MAYBE DELETE THIS PARAGRAPH BELOW?
-
-While I directly imported these files, crafting Node CLI scripts is a hobby I
-enjoy. Incorporating the `--legacy` and `--updated` CLI arguments adds an extra
-layer of functionality to this process.
-
-The entire contents of `tailwind-codemod/index.mjs` are below, and have been
-commented to explain each step.
+The contents of `tailwind-codemod/index.mjs` are below, and have been commented
+to explain each step.
 
 ```
 import fs from "node:fs/promises";
@@ -161,6 +180,14 @@ const { legacy, updated } = nopt(
   process.argv,
   2,
 );
+
+/**
+ * These objects will be used to look up the colors from each
+ * config. As we parse the configs, we will add the key value
+ * pairs used to create the Tailwind class names to each object.
+ */
+const legacyColors = {};
+const newColors = {};
 
 /**
  * Convert both tailwind config files into abstract syntax trees.
@@ -182,6 +209,11 @@ function parseAstObjectProperties(colors, nodePath) {
      */
     colors[nodePath.key.name || nodePath.key.value] = nodePath.value.value;
   } else if (nodePath.value.type === "ObjectExpression") {
+    /**
+     * We have a key with a value that is an an object (such as `theme.colors.primary`)
+     * so let's create a new key on our `colors` using the key. This allows us to
+     * capture the nested values, such as `light`, `main`, `dark`, etc.
+     */
     colors[nodePath.key.name || nodePath.key.value] = {};
 
     for (const propertyPath of nodePath.value.properties) {
@@ -191,7 +223,7 @@ function parseAstObjectProperties(colors, nodePath) {
 }
 
 /**
- * Looks for the `colors` key on the config's ast, and then grabs the key
+ * Looks for the "colors" key on the config's ast, and then grabs the key
  * values from it, adding them to the provided `colors` argument.
  */
 function getColorsFromAst(ast, colors) {
@@ -207,9 +239,6 @@ function getColorsFromAst(ast, colors) {
       }
     });
 }
-
-const legacyColors = {};
-const newColors = {};
 
 getColorsFromAst(legacyAst, legacyColors);
 getColorsFromAst(newAst, newColors);
@@ -284,7 +313,7 @@ await fs.writeFile(
  * This will hold the class names tailwind automatically creates for us using
  * the colors we provide it. So the `primary` color becomes `text-primary-main`,
  * `bg-primary-main`, `border-primary-main`. We want to map the legacy colors to
- * what they're new class names will be, with the legacy class name as the key,
+ * what their new class names will be, with the legacy class name as the key,
  * and the updated class name as the value.
  *
  * { "text-primary-main": "text-red-100" }
@@ -322,30 +351,47 @@ await fs.writeFile(
 A brief synopsis:
 
 - get the config files from the script arguments
-- use JSCodeshift to get the contents of `theme.colors`
-- create a "look up" object that allows me to map the old class names with the
+- create a "look up" object that allows you to map the old class names with the
   new ones
-- create two JSON files, `tw-classes-map.json` and `tw-colors-map.json`
+- use JSCodeshift to get the contents of `theme.colors` from those config files
+- take the values from the "look up" objects and map them to two JSON files,
+  `tw-classes-map.json` and `tw-colors-map.json`
 
-`tw-classes-map.json` will be used in the codemod that updates the old class
-names to their newer counterparts. The `tw-colors-map.json` is used to help spot
-check that the work of mapping the class names.
+`tw-classes-map.json` is used in the codemod that updates the old class names to
+their newer counterparts. The `tw-colors-map.json` is used to help spot check
+that the work of mapping the class names. `tw-colors-map.json` allowed for me to
+spot check that `primary-main` was correctly mapped to `red-500`. This helped me
+to check my work. `tw-classes-map.json` has the actual classes that we want to
+migrate in the code base:
+
+```
+{
+  "text-black": "text-black",
+  "text-primary-dark": "text-red-900",
+  "text-primary-light": "text-red-200",
+  "text-primary-main": "text-red-500"
+}
+```
+
+It helps with mapping `primary-main` into the `bg-primary-main`,
+`text-primary-main` and `border-primary-main` Tailwind classes that are
+generated from the config file.
 
 As mentioned earlier, this work was part of a re-platforming project for an
 existing web application. With a new repository at hand and numerous old files
 needing updates, manually verifying and updating each class name was overly
-cumbersome. However, directly migrating the old codebase into the `src`
-directory of the new codebase or applying the codemod to the active legacy
-codebase wasn't feasible.
+cumbersome. However, directly migrating the old code base into the `src`
+directory of the new code base or applying the codemod to the active legacy code
+base wasn't feasible. base wasn't feasible.
 
 To solve this, we established a dedicated `legacy` folder within the new
 repository. This allowed us to selectively transfer significant portions of the
-legacy codebase and execute our codemod. Throughout the migration of features,
+legacy code base and execute our codemod. Throughout the migration of features,
 the codemod significantly streamlined our tasks, eliminating one less concern
 from our checklist.
 
 If our classes were written like this, writing our codemod would be pretty
-straightforward.
+straightforward:
 
 ```
 className="flex w-full flex-col items-end rounded-lg border border-primary-main"
@@ -371,8 +417,8 @@ JSCodeShift to help us analyze our React components, generating a JSON and text
 file to see all of the different iterations. These files will help us to write
 our codemod that will update them.
 
-The entire contents of `tailwind-codemod/analysis.mjs` are below, and have been
-commented to explain each step.
+With this approach, we can create `tailwind-codemod/analysis.mjs`. Here are the
+contents of `tailwind-codemod/analysis.mjs` commented to explain each step:
 
 ```
 import fs from 'node:fs/promises';
@@ -546,7 +592,7 @@ await fs.writeFile(
 ```
 
 This script utilizes JSCodeShift more than the previous script. It is grabbing
-the `className` prop JSCodeShift's `JSXAttribute`, using the node path that
+the `className` prop with JSCodeShift's `JSXAttribute`, using the node path that
 represents the AST for `className`. Using the `type` of the node path, it can be
 determined what the node type for the `className` is, output in a JSON and
 `.txt` format to look at.
