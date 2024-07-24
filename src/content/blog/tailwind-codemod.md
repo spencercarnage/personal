@@ -132,14 +132,14 @@ components.
 
 With two separate code bases in different directories, I placed this script in a
 new folder adjacent to them, named `tailwind-codemod`. Next, I created a new npm 
-package, installed jscodeshift, and created a `analyzeConfigs.mjs` file.
+package, installed jscodeshift, and created a `mapConfigs.mjs` file.
 
 ```
 mkdir tailwind-codemod
 cd tailwind-codemod
 npm init -y
 npm i jscodeshift@^0.15.2
-vim analyzeConfigs.mjs
+vim mapConfigs.mjs
 ```
 
 I used `jscodeshift@^0.15.2` when I originally wrote this script. When I tried
@@ -150,10 +150,10 @@ as arguments. This script then outputs a JSON file into my `tailwind-codemod`
 directory.
 
 ```
-node analyzeConfigs.mjs --legacy path/to/tailwind.config.js --updated path/to/tailwind.config.mjs
+node mapConfigs.mjs --legacy path/to/tailwind.config.js --updated path/to/tailwind.config.mjs
 ```
 
-The contents of `tailwind-codemod/analyzeConfigs.mjs` are below, and have been commented
+The contents of `tailwind-codemod/mapConfigs.mjs` are below, and have been commented
 to explain its contents.
 
 ```js
