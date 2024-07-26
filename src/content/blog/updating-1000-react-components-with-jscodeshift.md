@@ -2,7 +2,7 @@
 title: "Updating 1000+ React Components with jscodeshift"
 description: "Using jscodeshift to update Tailwind classes across 1000+ React
 components"
-pubDate: "July 23 2024"
+pubDate: "July 25 2024"
 ---
 
 During a recent project of migrating a `create-react-app` code base to Next.js,
@@ -366,9 +366,14 @@ A brief synopsis:
 - take the values from the "look up" objects and map them to two JSON files,
   `tw-classes-map.json` and `tw-colors-map.json`
 
-`tw-colors-map.json` allowed me to spot check that `primary-main` was correctly 
-mapped to `red-500`. `tw-classes-map.json` has the actual Tailwind generated 
-classes that we want to migrate in the code base.
+In this code, the term "AST" is being used in a number of places. "AST" is an abbreviation for "abstract syntax tree". [Wikipedia defines an abstract syntax tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree) as a "data structure used
+in computer science to represent the structure of a program or code snippet."
+jscodeshift turns the config files into JavaScript objects that represent
+the code in those files, complete with methods that allowed me to modify the
+contents. This is how a codemod work, by turning your JavaScript into JavaScript that you can use to rewrite your JavaScript. [AST Explorer](https://astexplorer.net) is a great tool for playing around with ASTs and codemods. 
+
+The creation of `tw-colors-map.json` allowed me to easily spot check that `primary-main` 
+was correctly mapped to `red-500`. `tw-classes-map.json` has the actual Tailwind generated classes that we want to migrate in the code base.
 
 ```js
 // tw-colors-map.json
@@ -810,9 +815,6 @@ checking for a class name match with either
 `expression.consequent.value` or `alternate.value`. These are JS representations of the
 React components that we are modifying as interpreted by the Babel parser. Other
 parsers will generate different syntax.
-[AST Explorer](https://astexplorer.net) is a great tool for playing around
-with ASTs and codemods. 
-
 
 ## Running the Codemod
 
@@ -847,7 +849,7 @@ expressions I had to write my codemod for, there was edge cases I missed.
 The codemod in this post does not cover all of the edge cases for the
 4 types that are being targeted. 
 
-Here is a [repo where you can run these scripts locally](). You can also check out
+Here is a [repo where you can run these scripts locally](https://github.com/spencercarnage/tailwind-material-design-code-mod). You can also check out
 this [AST
 Explorer that demonstrates the codemod above in action](https://astexplorer.net/#/gist/926b9f286475fda3b07f8e693b06084e/7142299e17e0164633b1d814c0f7daab6342dc04). In the 
 bottom right hand pane, you can see the transformed results of the React
