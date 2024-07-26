@@ -1,0 +1,5 @@
+# only using prettier for markdown
+**/*.ts
+**/*.js
+**/*.mjs
+**/*.json

@@ -1,0 +1,10 @@
+{
+  "CallExpression": [
+    "className={cx(\"text-red-500\", {\n  \"bg-red-900\": isActive,\n})}"
+  ],
+  "ConditionalExpression": [
+    "className={isActive ? \"text-primary-light\" : \"text-primary-main\"}"
+  ],
+  "LogicalExpression": ["className={isActive && \"text-primary-dark\"}"],
+  "TemplateLiteral": ["className={`${className} text-primary-dark`}"]
+}
