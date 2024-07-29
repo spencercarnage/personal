@@ -109,6 +109,12 @@
   :target {
     scroll-padding-block-start: 2rem;
   }
+
+  @media (width >=80ch) {
+    body {
+      ppadding: 0px 20px 4rem;
+    }
+  }
 }
 
 @layer theme {
@@ -179,9 +185,7 @@
 
   .wrapper {
     margin-inline: auto;
-    max-width: clamp(16rem, var(--wrapper-max-width, 100vw), 80rem);
-    padding-left: var(--gutter);
-    padding-right: var(--gutter);
+    max-width: clamp(16rem, var(--wrapper-max-width, 100vw), 40em);
     position: relative;
   }
 
