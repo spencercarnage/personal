@@ -1,12 +1,12 @@
 ---
-title: "Updating 1000+ React Components with jscodeshift"
-description: "Using jscodeshift to update Tailwind classes across 1000+ React
+title: "Updating 200+ React Components with jscodeshift"
+description: "Using jscodeshift to update Tailwind classes across 200+ React
 components"
 pubDate: "July 25 2024"
 ---
 
 During a recent project of migrating a `create-react-app` code base to Next.js,
-I faced an interesting challenge: I had to update Tailwind class names across 1000+
+I faced an interesting challenge: I had to update Tailwind class names across 200+
 React components.
 
 The legacy code base used a [Material Design](https://m2.material.io/design/color/the-color-system.html)-based convention for naming classes.
@@ -14,7 +14,7 @@ This resulted in class names like `bg-primary-light` and `bg-primary-main`.
 These class names had to be updated to a new color-specific class naming convention like `bg-blue-200` and `bg-blue-500`. Changing these by hand would be time consuming and 
 tedious.
 
-This post outlines the steps I took to update Tailwind class names across 1000+
+This post outlines the steps I took to update Tailwind class names across 200+
 React components using custom Node.js scripts and a jscodeshift codemod. 
 
 ## Some Questions To Consider Before Getting Started
@@ -856,6 +856,15 @@ bottom right hand pane, you can see the transformed results of the React
 component in the top left hand pane.
 
 ## Conclusion
+
+Running a similar codemod like this on our codebase resulted in 249 updated
+React components.
+
+![Screenshot of from a GitHub PR where 249 React components were updated by a codemod](../../images/blog/200-components-jscodeshift.png)
+
+I also wrote another codemod to migrate the usage of a custom `translate` function to
+`react-i18next`'s `useTranslation`. Another small but tedious changes made
+negligible with jscodeshift.
 
 In the tech sector's current climate, engineers are being asked to do more with
 less. Codemods are great tools to help with that. While it will take some time to
