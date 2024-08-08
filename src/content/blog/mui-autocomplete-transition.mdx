@@ -1,0 +1,59 @@
+---
+title: "MUI <Autocomplete> Transition"
+description: "Exploring how to use MUI's <Autocomplete> with Transitions"
+pubDate: "August 17 2024"
+
+---
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+/>
+
+import Example1 from '../../components/blog/mui-autocomplete-transition/Example1.jsx';
+import Example2 from '../../components/blog/mui-autocomplete-transition/Example2.jsx';
+import Example3 from '../../components/blog/mui-autocomplete-transition/Example3.jsx';
+
+Working with Next.js and Relay over the past year, I have also found myself exploring
+React's Transitions. As explained in the [React v18.0 blog posted on March
+29](https://react.dev/blog/2022/03/29/react-v18),
+2022, Transitions are used to "distinguish between urgent and non-urgent
+updates". As explained in the article:
+
+> For example, when you select a filter in a dropdown, you expect the filter
+> button itself to respond immediately when you click. However, the actual
+> results may transition separately. A small delay would be imperceptible and
+> often expected. And if you change the filter again before the results are done
+> rendering, you only care to see the latest results.
+>
+> Typically, for the best user experience, a single user input should result in
+both an urgent update and a non-urgent one.
+
+Let's test that out. Here's an autocomplete that is sync.
+
+<Example1 client:load />
+
+Here's an autocomplete that is async.
+
+<Example2 client:load />
+
+Here is an Suspense-enabled autocomplete.
+
+<Example3 client:load />
+
+blah
+
+blah
+
+blah
+
+blah
+
+blah
+
+blah
+
+blah
+
