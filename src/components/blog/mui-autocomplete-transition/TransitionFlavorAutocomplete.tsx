@@ -1,38 +1,37 @@
 import { use } from "react";
 import Select, { type SingleValue } from "react-select";
-import { useFlavorData } from "./FlavorDataProvider";
-import type Dessert from "./types/Dessert";
+import { fetchData } from "./hooks/useFetchFlavors";
 import type FlavorOption from "./types/FlavorOption";
 
-export default function SuspenseEnabledFlavorAutocomplete({
+export default function TransitionFlavorAutocomplete({
   dessertValue,
+  loading = false,
   onChange,
   placeholder = "Select a flavor",
   value,
 }: {
-  dessertValue: Dessert;
-  placeholder?: string;
+  dessertValue: string;
+  loading?: boolean;
   onChange: (value: SingleValue<FlavorOption>) => void;
+  placeholder?: string;
   value: null | FlavorOption;
 }) {
-  const { fetchData } = useFlavorData();
   const flavorOptions = use(fetchData(dessertValue));
 
   return (
     <label>
       Flavor
       <Select<FlavorOption>
-        id="flavor"
         placeholder={placeholder}
+        value={value}
         onChange={(newValue) => {
           onChange(newValue);
         }}
         isClearable
         isSearchable
         name="flavor"
-        options={flavorOptions || []}
-        isLoading={!flavorOptions?.length}
-        value={value}
+        isLoading={loading}
+        options={flavorOptions}
       />
     </label>
   );

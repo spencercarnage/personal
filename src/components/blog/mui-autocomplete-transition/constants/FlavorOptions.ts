@@ -1,5 +1,5 @@
-import type Dessert from "../Dessert";
-import type FlavorOption from "../FlavorOption";
+import type Dessert from "../types/Dessert";
+import type FlavorOption from "../types/FlavorOption";
 
 const FlavorOptions: {
   [key in Dessert]: FlavorOption[];
@@ -19,6 +19,8 @@ const FlavorOptions: {
     { value: "apple", label: "Apple" },
     { value: "cherry", label: "Cherry" },
     { value: "peach", label: "Peach" },
+    { value: "pecan", label: "Pecan" },
+    { value: "lemon-meringue", label: "Lemon Meringue" },
   ],
 };
 

@@ -1,7 +1,7 @@
 import Select, { type SingleValue } from "react-select";
-import type Dessert from "./Dessert";
-import type FlavorOption from "./FlavorOption";
 import FlavorOptions from "./constants/FlavorOptions";
+import type Dessert from "./types/Dessert";
+import type FlavorOption from "./types/FlavorOption";
 
 export default function FlavorAutocomplete({
   dessertValue,
@@ -16,7 +16,6 @@ export default function FlavorAutocomplete({
     <label>
       Flavor
       <Select<FlavorOption>
-        id="flavor"
         placeholder="Select a flavor"
         defaultValue={value}
         onChange={(newValue) => {

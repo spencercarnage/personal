@@ -84,12 +84,12 @@
   }
 
   blockquote {
-    border: 1px solid #353745;
-    color: #c4c4c8;
+    border: 1px solid var(--primary);
+    color: var(--dark);
     padding: 2px 0px 2px 20px;
     margin: 0px;
     font-style: italic;
-    background: #564c55;
+    background: var(--light);
   }
 
   :focus-visible {

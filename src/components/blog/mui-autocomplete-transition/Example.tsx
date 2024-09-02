@@ -1,8 +1,33 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
+import { useFlavorData } from "./FlavorDataProvider";
 
-export default function Example({ children }: { children: ReactNode }) {
+function randomStr() {
+  return (Math.random() + 1).toString(36).substring(7);
+}
+
+export default function Example({
+  children,
+  header,
+  num = "Example",
+  reset = "reset",
+}: {
+  children: ReactNode;
+  header: string;
+  num?: number | string;
+  reset?: string;
+}) {
+  const [exampleId, setExampleId] = useState(randomStr());
+  const { clearCache } = useFlavorData();
+
+  useEffect(() => {
+    return () => {
+      clearCache();
+    };
+  }, [clearCache]);
+
   return (
     <div
+      key={exampleId}
       style={{
         color: "black",
         display: "grid",
@@ -11,6 +36,18 @@ export default function Example({ children }: { children: ReactNode }) {
         padding: "24px",
       }}
     >
+      <div style={{ fontSize: "12px" }}>
+        {header || num}
+        <button
+          type="button"
+          onClick={() => {
+            setExampleId(randomStr());
+            clearCache();
+          }}
+        >
+          {reset}
+        </button>
+      </div>
       {children}
     </div>
   );

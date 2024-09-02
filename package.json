@@ -18,7 +18,7 @@
     "@astrojs/rss": "^4.0.7",
     "@astrojs/sitemap": "^3.1.6",
     "@biomejs/biome": "^1.8.3",
-    "astro": "^4.12.2",
+    "astro": "^4.13.2",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "prettier": "^3.2.5",
@@ -37,17 +37,17 @@
     ]
   },
   "dependencies": {
-    "@astrojs/react": "^3.6.0",
-    "react": "19.0.0-rc-e948a5ac-20240807",
-    "react-dom": "19.0.0-rc-e948a5ac-20240807",
-    "react-select": "^5.8.0",
+    "@astrojs/react": "^3.6.1",
     "@types/react": "npm:types-react@rc",
-    "@types/react-dom": "npm:types-react-dom@rc"
+    "@types/react-dom": "npm:types-react-dom@rc",
+    "react": "^19.0.0-rc-e56f4ae3-20240830",
+    "react-dom": "^19.0.0-rc-e56f4ae3-20240830",
+    "react-select": "^5.8.0"
   },
   "overrides": {
     "react-select": {
-      "react": "19.0.0-rc-e948a5ac-20240807",
-      "react-dom": "19.0.0-rc-e948a5ac-20240807"
+      "react": "^19.0.0-rc-e56f4ae3-20240830",
+      "react-dom": "^19.0.0-rc-e56f4ae3-20240830"
     },
     "@types/react": "npm:types-react@rc",
     "@types/react-dom": "npm:types-react-dom@rc"
