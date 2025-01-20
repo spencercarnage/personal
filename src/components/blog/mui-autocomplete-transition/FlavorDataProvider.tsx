@@ -87,7 +87,6 @@ export default function FlavorDataProvider({
   );
 
   const clearCache = useCallback(() => {
-    console.log("clear cache");
     cacheRef.current = new Map();
   }, []);
 

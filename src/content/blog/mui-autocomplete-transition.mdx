@@ -13,19 +13,22 @@ pubDate: "August 17 2024"
 
 import NonTransitionExample from "../../components/blog/mui-autocomplete-transition/examples/NonTransitionExample.tsx";
 import SuspenseWithUseExample from "../../components/blog/mui-autocomplete-transition/examples/SuspenseWithUseExample.tsx";
+import LoadingSelectExample from "../../components/blog/mui-autocomplete-transition/examples/LoadingSelectExample.tsx";
 import AppSuspenseOnlyExample from "../../components/blog/mui-autocomplete-transition/examples/AppSuspenseOnlyExample.tsx";
-import AppSuspenseWithFlavorSuspenseExample from "../../components/blog/mui-autocomplete-transition/examples/AppSuspenseWithFlavorSuspenseExample.jsx";
-import NoUnmountEffectExample from "../../components/blog/mui-autocomplete-transition/examples/NoUnmountEffectExample.tsx";
-import UseIdChangingExample from "../../components/blog/mui-autocomplete-transition/examples/UseIdChangingExample.jsx";
 import SuspenseWithDummyFallbackExample from "../../components/blog/mui-autocomplete-transition/examples/SuspenseWithDummyFallbackExample.jsx";
 import StartTransitionExample from "../../components/blog/mui-autocomplete-transition/examples/StartTransitionExample.jsx";
-import StartTransitionLoadingTextExample from "../../components/blog/mui-autocomplete-transition/examples/StartTransitionLoadingTextExample.jsx";
+import FirstTransitionIsPendingExample from "../../components/blog/mui-autocomplete-transition/examples/FirstTransitionIsPendingExample.jsx";
+import IsPendingConsoleExample from "../../components/blog/mui-autocomplete-transition/examples/IsPendingConsoleExample.jsx";
+import CombinedIsPendingWithStateExample from "../../components/blog/mui-autocomplete-transition/examples/CombinedIsPendingWithStateExample.jsx";
+import IsPendingNullExample from "../../components/blog/mui-autocomplete-transition/examples/IsPendingNullExample.jsx";
 
-Working with Next.js and Relay over the past year, I have found myself
-proactively using React's Transitions for the first time. As explained in the
+Working with Next.js and Relay over the past year, I have found myself using
+React's Suspense and Transitions a lot more than I did previously. I had very
+minimal experience with Suspense but none when it came to Transitions.
+
+What is a Transition, and how do we use them in React? As explained in the
 [React v18.0 blog posted on March 29, 2022](https://react.dev/blog/2022/03/29/react-v18),
-Transitions are used to "distinguish between urgent and non-urgent updates". As
-explained in the post:
+Transitions are used to "distinguish between urgent and non-urgent updates".
 
 > For example, when you select a filter in a dropdown, you expect the filter
 > button itself to respond immediately when you click. However, the actual
@@ -36,95 +39,141 @@ explained in the post:
 > Typically, for the best user experience, a single user input should result in
 > both an urgent update and a non-urgent one.
 
-## Outline
+While Next and Relay both utilize Transitions, there were abstracted in such a
+way that I never properly understood how they worked. Despite months of using
+`<Suspense>`, `useTransition` (and `startTransition`), and `loading.tsx`, I
+couldn't reliably explain how they worked. So I set out to learn Transitions,
+and what I found has left me a little bit confused.
 
-1. Introduction
-1. Show select without transition (wrap it in Suspense to show Suspense not
-   triggering)
-1. Show select with transition that bubbles to app Suspense
-1. Show select with transition that bubbles to select Suspense
-1. Show select with dummy select fallback
-1. Show dummy select only loads on second change when using startTransition
+Let's dive in.
 
-Here's an autocomplete that is async.
+## Non Suspense Example
+
+Here's an autocomplete for selecting a dessert.
 
 <NonTransitionExample client:only="react" />
 
+When you select a dessert that has flavor options ("Mom's Famous Chocolate Chip
+Cookies" don't have any flavor options), another autocomplete is rendered below
+it, prompting you to select a dessert flavor. The flavors are fetched from an
+API, which means we want to show a loading state while that fetch is happening.
+The `loading` state for `<FlavorSelect>` in the example below is determined by
+the absence of `flavorOptions`.
+
+```jsx
+<FlavorSelect loading={!flavorOptions} />
+```
+
+Once the flavors have finished loading, `setFlavorOptions` is called with that
+result, and the `loading` prop is set to true. There is no Suspense or
+`startTransition`. Just local state variables that get called after the async
+fetch is completed. Pretty standard stuff.
+
+## Prevent Transitions From Triggering Parent Loading States
+
 Now imagine we have a framework like Next that has an app loading state that
-utilizes `<Suspense>`. Any app loading event, such as a changing a route, will
-show the app's `<Suspense>` fallback UI. In the example below, the
-`<FlavorSelect>` component triggers a Transition when it fetches data. However
-the `<FlavorSelect>` does not have a `<Suspense>` wrapped around it. This causes
-the Transition to "bubble" up to the nearest parent `<Suspense>` on the render
-tree, which happens to be app's `<Suspense>` which is used for show app-wide
-loading UI. Selecting a dessert will show the "App Loading..." UI from the app's
-`<Suspense>` fallback.
+utilizes Suspense. Any app loading event, such as a changing a route, will show
+the app's Suspense fallback UI.
+
+In the example below, the `<FlavorSelect>` component triggers a Transition when
+it fetches data. However the `<FlavorSelect>` does not have its own Suspense
+wrapped around it. This causes the Transition to show the nearest parent's
+Suspense fallback. In the example below, that happens to be app's Suspense.
+Selecting a dessert will show the "App Loading..." UI from the app's Suspense
+fallback.
 
 <AppSuspenseOnlyExample client:only="react" />
 
-What we want is to show loading UI for the `<FlavorSelect>`, not the whole app.
+One way of thinking about Suspense is that of a component that is setting a
+boundary around Transitions that "bubble up" from its children components.
+Suspense catches the Transition, isolating it to a specific part of the UI. This
+reduces code that we would otherwise write and manage ourselves.
 
-Wrapping our `<FlavorSelect>` with its own `<Suspense>` prevents the Transition
-from "bubbling" up unnecessarily to the wrong `<Suspense>`. When selecting a
-dessert, the user will see "Loading \<dessert_name\> flavors..." coming from the
-`<Suspense>` that is wrapping the `<FlavorSelect>`.
+What we want is to show loading UI for the `<FlavorSelect>` only.
+
+Wrapping our `<FlavorSelect>` with its own Suspense prevents the Transition from
+"bubbling up " unnecessarily to the wrong Suspense. When selecting a dessert,
+the user will see a message like "Loading Cake flavors..." coming from the
+Suspense that is wrapping the `<FlavorSelect>`.
 
 <SuspenseWithUseExample client:only="react" />
 
-Success! We have set up our `<FlavorSelect>` with `<Suspense>` to show the
-correct loading UI.
+Success! We have set up our `<FlavorSelect>` with a Suspense to show the correct
+loading UI. Feel free to read
+[React's own documentation on the Suspense](https://react.dev/reference/react/Suspense)
+to learn more about how this works.
 
-Instead of showing "Loading \<dessert_name\> flavors..." to our users, we would
-probably show a loading skeleton instead. But our `<FlavorSelect>` comes with
-its own loading state.
+## Tapping Into The Suspended Component's Loading State
 
-**insert example that just shows the loading state**
+Our `<FlavorSelect>` comes with its own loading state. Below is an example of
+what that loading state looks like, three pulsating dots. Clicking the
+`<FlavorSelect>` while it is loading will show a "Loading..." text where the
+options would be.
 
-We have a loading indictator built into the component. If we click the
-`<FlavorSelect>` while it is loading, we see a "Loading..." text where the
-options would be. We may prefer to show this loading state to the user in place
-of loading skeleton. Our form may have a number of inputs that do not rely on
-asynchronous data, so showing all of the inputs right away could be preferably
-than a skeleton loading UI that they can not interact with. The user can start
-using the non-async inputs without having to wait for the async inputs to be
-populated with data.
+<LoadingSelectExample client:only="react" />
 
-How could we use `<Suspense>` to show a loading UI for async components that
-meets our need to provide the preferred user experience described above?
+If our `<FlavorSelect>` is wrapped in a Suspense, it will replace
+`<FlavorSelect>` with the fallback UI while fetching data. This means we can not
+use `<FlavorSelect>`'s own loading UI.
 
-We could create a "dummy" `<FallbackFlavorSelect>` component that we put in the
-`fallback` prop. You have a fully functioning `<Select>` input that is forced
-into a "loading" state. Once your actual `<Select>` has finished fetching data,
+But why would we want to use `<FlavorSelect>`'s own loading UI over the Suspense
+fallback?
+
+Our form could have a number of inputs that do not rely on asynchronous data, so
+showing all of the inputs right away could be more preferable than a skeleton
+loading UI that the user can not interact with. Especially if they have a slow
+connection. The user can start using the non-async inputs without having to wait
+for the async inputs to be populated with data.
+
+But Suspense abstracts the need for us to write our logic for toggling loading
+UI. As demonstrated above, Suspense limits how we can showing our loading UI.
+However, without a Suspense component, the Transition from fetching desserts
+flavors could "bubble up" to the wrong Suspense, resulting in an undesirable
+experience.
+
+How can we use Suspense while showing our `<FlavorSelect>` in a loading state?
+
+## Dummy Fallback Select
+
+One way to achieve an interactive form that uses Suspense would be to create a
+"dummy" `<FallbackFlavorSelect>` component that we render with the `fallback`
+prop. You have a fully functioning `<FlavorSelect>` input that is displaying a
+"loading" state. Once your actual `<FlavorSelect>` has finished fetching data,
 you show that instead.
+
+```jsx
+<Suspense fallback={<FallbackFlavorSelect />}>
+  <FlavorSelect />
+</Suspense>
+```
 
 <SuspenseWithDummyFallbackExample client:only="react" />
 
 A problem with this dummy fallback approach is apparent when the user tries to
-interact with it while the Transition is happening. Clicking on
-`<FallbackFlavorSelect>` will show an empty dropdown list with the word
-"Loading...". If the user has this select open when the data has finished
+interact with `<FallbackFlavorSelect>` while the `<FlavorSelect>` is suspended.
+
+A user clicking on `<FallbackFlavorSelect>` will see an empty dropdown list with
+the word "Loading...". If the select is open when the data has finished
 fetching, the dropdown will close on them. That is because
-`<FallbackFlavorSelect>` is being replaced with `<FlavorSelect>`. That can be a
-jarring experience for the user. We could make it so that use can't open the
-dropdown on the dummy select. We still run the risk of users thinking that the
-UI is broken, if only momentarily. There's a reason why select components that
-asynchronously load their options will show an empty dropdown that says
-"Loading...": its enhances the user experience, if only a little.
+`<FallbackFlavorSelect>` is being replaced with `<FlavorSelect>`. This can be a
+jarring experience for the user.
 
-One way of thinking about `<Suspense>` is of a component that is setting a
-boundary around a Transition that is "bubbling" up from the component that
-created it. `<Suspense>` catches the Transition, isolating it to a specific part
-of the UI. This reduces code that we would otherwise write and manage ourselves.
-I wish that it could also help us to bubble those Transitions down into the
-component that initiated it. Or better yet, into it's own children.
+We could make it so that the user is unable to open the dropdown on the dummy
+fallback select. Why would we not want to do this? There's a reason why select
+components that asynchronously load their options will show an empty dropdown
+that says "Loading...": its enhances the user experience, if only a little.
 
-While `<Suspense>` is great at capturing the Transitions that "bubble" up, it
-can be challenging to bubble the Transitions down into the components that
-trigger those Transitions.
+Albeit contrived, real world examples of this problem do exist. But there is a
+solution: `startTransition`.
 
-The `useTransition` hooks should be able to help with this.
+## `startTransition`
 
-```
+While Suspense is great at capturing a Transition that "bubbles up", how do we
+capture a loading state that we want to push down into the component itself, or
+a child of that component? The `useTransition` hook (and the `isPending` value
+it gives us) should be able to help with this.
+
+```jsx
 const [dessert, setDessert] = useState(null);
 const [isPending, startTransition] = useTransition();
 
@@ -135,124 +184,153 @@ const handleClick = (dessert) => {
 };
 ```
 
-Calling `setDessert` in a `startTransition` should mark the state update as a
-Transition, allowing for us to use `isPending` for length of the Transition.
-`setDessert` is used to render `<FlavorSelect>` which fetches data. In theory,
-`isPending` should be `true` for the duration of the fetch.
+By calling `setDessert` in `startTransition`, we should be able to render
+`<FlavorSelect>` in a loading state due the `isLoading={isPending}` prop we pass
+to it.
+
+This is the code we are using to render `<FlavorSelect>`.
+
+{/* prettier-ignore */}
+```jsx
+{dessert && <FlavorSelect loading={isPending} />}
+```
+
+Let's give it a shot.
 
 <StartTransitionExample client:only="react" />
 
+That's interesting. Did you catch that?
+
 The first time a dessert with flavors is selected, there is no change to the UI
-until the Transition has finished. After that Transition, we see the
-`<FlavorSelect>`. However, subsequent changes to the value of `dessert` will
-show `<FlavorSelect>` in a loading state, due to the `isLoading={isPending}`
-prop. `isPending` is `true` for the duration of the fetch of the flavor options
-for the selected dessert. It just has to wait for that first Transition to
-complete for the `<FlavorSelect>` to render, allowing for subsequent Transitions
-to be accurately reflected in the `<FlavorSelect>`'s loading state.
+until the Transition has finished. However, subsequent Transitions will result
+in the `<FlavorSelect>` being rendered in a loading state for the duration of
+the Transition. (Also, the "Select a \<dessert\> flavor" text does not update
+until the Transition has completed.)
 
-Huh?
+Why do we not see the `<FlavorSelect>` immediately when the first Transition has
+started? Since `<FlavorSelect>` was not initially rendered, it did not show up
+until after that first Transition completed.
 
-Here is another fun wrinkle. If we use `isPending` to conditionally render
-something, that will show up immediately on the first Transition.
+<strong>
+  While `isPending` can help with showing a loading state, it can only do so
+  after the component has been mounted.
+</strong>
 
-**example of `isPending` rendering stuff.**
+## Conditionally Loading With `isPending`
 
-Do we need a separate variable that is set outside of startTransition for
-`<FlavorSelect>` to show up?
+While we can not use `isPending` in the first render of a component that was
+mounted in response to a Transition, we can use that Transition's `isPending` in
+other ways. The example below follows the same logic as the one above, with one
+exception: the text of `isPending: true` _is_ being rendered as soon as the
+first Transition starts, with the following code:
 
-**example of separate variable set outside of startTransition**
+{/* prettier-ignore */}
+```jsx
+{isPending && "isPending: true"}
+{dessert && <FlavorSelect isLoading={isPending} />}
+```
 
-**talk about how wild the console.logging is**
+See it in action:
 
-Nope. But it does work the "loading text" here... What is going on? The console
-shows one thing, but the actual rendering is showing something else. That said,
-I still can't get my `isLoading={isPending}` to be true when I need it to be.
+<FirstTransitionIsPendingExample client:only="react" />
 
-While this prevents the Transition from "bubbling" up to the app 's `<Suspense>`
+But this one appears to have an easy fix, right?
 
-Another best practice utilizing `use` is to not use a promise that is created on
-the client.
-[Here is what the React docs have to say about that](https://react.dev/reference/react/use#caveats):
+{/* prettier-ignore */}
+```jsx
+{isPending && "isPending: true"}
+{(isPending || dessert) && <FlavorSelect isLoading={isPending} />}
+```
 
-> Prefer creating Promises in Server Components and passing them to Client
-> Components over creating Promises in Client Components. Promises created in
-> Client Components are recreated on every render. Promises passed from a Server
-> Component to a Client Component are stable across re-renders.
+Nope.
 
-I believe that this could be one of the biggests hurdles to widespread adoption
-of `use`.
+<CombinedIsPendingWithStateExample client:only="react" />
 
-There are ways to easily create memoized promises on the client. Pass in an ID
-to the component, and use that to track your promise in a `Map`. When that ID
-changes, remove that promise from the cache. React's `useId` could help you here
-with this. Wait. That is problematic too.
+Not only does it not render `<FlavorSelect>` until the after the first
+Transition has finished, but it does not render `<FlavorSelect>` during any
+Transition.
 
-<UseIdChangingExample client:only="react" />
+## Console Logging `isPending` Breaks My Brain
 
-The example above is console.logging `useId`'s result twice. Once before `use`
-and then right `use`. When the app initiates a loading Transition, the first
-console.log runs. The second does not. When the the loading Transition
-completes, both console.logs run.
+This next one requires you to open up your browser dev tools to see this in
+action.
 
-This is different behavior then I have come to expect from a React component.
-Hooks were different from class components, and I adjusted. `use` is different,
-and I will adjust. These aspects of React 19 are currently in canary release so
-it all subject to change. Until React 19's API settles down, and the devrel
-folks make the rounds, helping us all to understand how to better use these new
-paradigms, I can only speculate at how React 19 will effect us in userland.
+An interesting aspect of how `isPending` works is that the values being logged
+will not always line up with what is being rendered by `isPending`. This
+following code snippet is console logging `isPending` in the "render" function
+of the component as well as in a `useEffect`.
 
-One interesting caveat about `use` and client components is that if your
-component unmounts before `use` has resolved, your "unmount" effect in the
-component that utilizes `use` will not run.
+```jsx
+const [isPending, startTransition] = useTransition();
 
-Below is an example of an app that takes 5 seconds to load. Take the following
-steps to see the "unmount" effect running:
+console.log("on render", { isPending });
 
-- open your browser dev-tools
-- press the load button
-- Wait 5 seconds for the "Success!" message to show up
-- press the "Unmount" button
-- observe the "unmount" message in the console
+useEffect(() => {
+  console.log("in useEffect", { isPending });
+}, [isPending]);
+```
 
-Once that is done, do the following to see the "unmount" effect not running:
+The "on render" console log will show the value as `true`, immediately followed
+by it changing back to `false`. This is different from the "in useEffect"
+console log which shows `true` for the duration of the Transition, switching
+back to `false` when the Transition has completed. Open up your browser dev
+tools to see for yourself:
 
-- press the load button
-- before the 5 seconds are up, press the "Unmount" button
-- observe how the "unmount" message does not show up in the console
+<IsPendingConsoleExample client:only="react" />
 
-<NoUnmountEffectExample client:only="react" />
+As a champion console logger, this was an interesting quirk to discover.
 
-The `<AppLoading>` component is a child of `<Suspense>`. When `<AppLoading>`
-mounts, it calls `use`. This tells the parent component that a pending
-Transition has happened, and `<Suspense>` should show the loading state provided
-by the `fallback` prop. When you press the "Unmount" button, it is removing the
-both the `<Suspense>` and all of its children. Since `<AppLoading>` triggered a
-Transition, and `<Suspense>` was showing the fallback, maybe `<AppLoading>` was
-never mounted in such a state to call the `useEffect` that has the unmounting
-behavior in it...?
+## Conclusion
 
-This is paradigm-changing behavior for me.
+The start of 2024 had me taking part in a large effort to convert a CRA app to
+one that uses Next.js. A number of exciting new concepts and challenges
+presented themselves to me, and I embraced them wholeheartedly. When
+`useTransition` wasn't working quite as I expected, I said "hmm" and found some
+other way to achieve the experience I was trying to create. It was those head
+scratching moments that eventually inspired this blog post. Yes, I did find
+_some_ clarity but I found even more confusion.
 
-With `<Suspense>` wrapped around the flavor select:
+Despite React 19 being officially released, there is still some caution around
+using core aspects of it. They say that in the documentation.
 
-<AppSuspenseWithFlavorSuspenseExample client:only="react" />
+> Suspense-enabled data fetching without the use of an opinionated framework is
+> not yet supported. The requirements for implementing a Suspense-enabled data
+> source are unstable and undocumented. An official API for integrating data
+> sources with Suspense will be released in a future version of React.
 
-We are able to get it to work, but only after the first. Maybe conditional usage
-of `use`?
+These examples are using a custom data fetching implementation from ChatGPT that
+I had to tweak to get working. It is quite possible that there is some bug in
+that code that is causing all of this to work in confusing ways. The quote above
+spells it out: use Suspense-enabled data fetching at your own peril. Until Meta
+or Vercel starts signing my paychecks, I probably shouldn't be trying to write
+my own suspense-enabled framework anytime soon. That's the impression I get.
 
-<StartTransitionLoadingTextExample client:only="react" />
+And maybe that's the real problem. React has all of these new exciting features,
+and yet it seems like you have to be anointed in order to use some of them. Or
+at least someone more talented than me?
 
-blah
+I thought using Transitions would be easy once I sat down and learned them
+properly. In my day-to-day, I am ADHD-addled code monkey, typing away furiously
+to get the next feature out. When perusing Stack Overflow, I skip the question
+altogether and go straight to the answer, hoping it will unblock me so I can
+move on. I skim docs and wonder why things don't work when really I just needed
+to slow down.
 
-blah
+While doing all of that, React has been there by my side, steady as a rock,
+waiting for me to figure out that the problem I'm trying to Google my way out of
+is due to some janky ass `useEffect` I wrote an hour prior. But with
+Transitions, its been quite challenging.
 
-blah
+The use cases I present here are pretty straightforward. But in the real world,
+with a meta-framework like Next, that is using an "opinionated framework" like
+Relay, there are moments of intense swearing because `loading.tsx` just decided
+to mount then unmount for the duration of a query fetch. How do I explain to my
+PM that we can't fix this one issue where the loading UI on this particular page
+just disappears while the data is being fetched?
 
-blah
+"Sorry, Tina. React is having this weird Angular 2 moment, and our previous
+experience of working with it doesn't apply here."
 
-blah
-
-blah
-
-blah
+<br />
+<br />
+<br />

@@ -1,4 +1,3 @@
-import React from "react";
 import Example from "../Example";
 import FlavorDataProvider from "../FlavorDataProvider";
 import StartTransitionApp from "../apps/StartTransitionApp";

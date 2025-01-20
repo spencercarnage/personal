@@ -5,25 +5,30 @@ function randomStr() {
   return (Math.random() + 1).toString(36).substring(7);
 }
 
+export type ExampleProps = {
+  children: ReactNode;
+  header: string;
+  num?: number | string;
+  reset?: string;
+  onReset?: () => void;
+};
+
 export default function Example({
   children,
   header,
   num = "Example",
   reset = "reset",
-}: {
-  children: ReactNode;
-  header: string;
-  num?: number | string;
-  reset?: string;
-}) {
+  onReset,
+}: ExampleProps) {
   const [exampleId, setExampleId] = useState(randomStr());
   const { clearCache } = useFlavorData();
 
   useEffect(() => {
     return () => {
+      onReset?.();
       clearCache();
     };
-  }, [clearCache]);
+  }, [clearCache, onReset]);
 
   return (
     <div

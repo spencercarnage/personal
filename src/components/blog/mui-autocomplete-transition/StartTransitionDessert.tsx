@@ -29,9 +29,9 @@ export default function StartTransitionDessert({
 
   return (
     <>
-      {isPending && showLoadingText && "isPending: true"}
       <DessertAutocomplete onChange={handleChange} />
 
+      {isPending && showLoadingText && "isPending: true"}
       {dessert && dessert.value !== "famous_cookies" && (
         <TransitionFlavorAutocomplete
           key={dessert?.value}

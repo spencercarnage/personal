@@ -4,20 +4,25 @@ import { useFlavorData } from "./FlavorDataProvider";
 import type Dessert from "./types/Dessert";
 import type FlavorOption from "./types/FlavorOption";
 
-export default function TransitionFlavorAutocomplete({
+export default function NullFlavorSelect({
   dessertValue,
   loading = false,
   onChange,
   placeholder = "Select a flavor",
   value,
 }: {
-  dessertValue: Dessert;
+  dessertValue: null | Dessert;
   loading?: boolean;
   onChange: (value: SingleValue<FlavorOption>) => void;
   placeholder?: string;
   value: null | FlavorOption;
 }) {
   const { fetchData } = useFlavorData();
+
+  if (!dessertValue) {
+    return null;
+  }
+
   const flavorOptions = use(fetchData(dessertValue));
 
   return (
