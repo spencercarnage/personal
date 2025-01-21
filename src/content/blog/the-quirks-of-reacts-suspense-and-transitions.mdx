@@ -1,7 +1,9 @@
 ---
-title: "MUI <Autocomplete> Transition"
-description: "Exploring how to use MUI's <Autocomplete> with Transitions"
-pubDate: "August 17 2024"
+title: "The Quirks of React's Suspense and Transitions"
+description:
+  "Exploring some weird quirks that came up with using React's Suspense and
+  Transitions"
+pubDate: "January 21 2025"
 ---
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -11,16 +13,16 @@ pubDate: "August 17 2024"
   href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
 />
 
-import NonTransitionExample from "../../components/blog/mui-autocomplete-transition/examples/NonTransitionExample.tsx";
-import SuspenseWithUseExample from "../../components/blog/mui-autocomplete-transition/examples/SuspenseWithUseExample.tsx";
-import LoadingSelectExample from "../../components/blog/mui-autocomplete-transition/examples/LoadingSelectExample.tsx";
-import AppSuspenseOnlyExample from "../../components/blog/mui-autocomplete-transition/examples/AppSuspenseOnlyExample.tsx";
-import SuspenseWithDummyFallbackExample from "../../components/blog/mui-autocomplete-transition/examples/SuspenseWithDummyFallbackExample.jsx";
-import StartTransitionExample from "../../components/blog/mui-autocomplete-transition/examples/StartTransitionExample.jsx";
-import FirstTransitionIsPendingExample from "../../components/blog/mui-autocomplete-transition/examples/FirstTransitionIsPendingExample.jsx";
-import IsPendingConsoleExample from "../../components/blog/mui-autocomplete-transition/examples/IsPendingConsoleExample.jsx";
-import CombinedIsPendingWithStateExample from "../../components/blog/mui-autocomplete-transition/examples/CombinedIsPendingWithStateExample.jsx";
-import IsPendingNullExample from "../../components/blog/mui-autocomplete-transition/examples/IsPendingNullExample.jsx";
+import NonTransitionExample from "../../components/blog/the-quirks-of-reacts-suspense-and-transitions/examples/NonTransitionExample.tsx";
+import SuspenseWithUseExample from "../../components/blog/the-quirks-of-reacts-suspense-and-transitions/examples/SuspenseWithUseExample.tsx";
+import LoadingSelectExample from "../../components/blog/the-quirks-of-reacts-suspense-and-transitions/examples/LoadingSelectExample.tsx";
+import AppSuspenseOnlyExample from "../../components/blog/the-quirks-of-reacts-suspense-and-transitions/examples/AppSuspenseOnlyExample.tsx";
+import SuspenseWithDummyFallbackExample from "../../components/blog/the-quirks-of-reacts-suspense-and-transitions/examples/SuspenseWithDummyFallbackExample.jsx";
+import StartTransitionExample from "../../components/blog/the-quirks-of-reacts-suspense-and-transitions/examples/StartTransitionExample.jsx";
+import FirstTransitionIsPendingExample from "../../components/blog/the-quirks-of-reacts-suspense-and-transitions/examples/FirstTransitionIsPendingExample.jsx";
+import IsPendingConsoleExample from "../../components/blog/the-quirks-of-reacts-suspense-and-transitions/examples/IsPendingConsoleExample.jsx";
+import CombinedIsPendingWithStateExample from "../../components/blog/the-quirks-of-reacts-suspense-and-transitions/examples/CombinedIsPendingWithStateExample.jsx";
+import IsPendingNullExample from "../../components/blog/the-quirks-of-reacts-suspense-and-transitions/examples/IsPendingNullExample.jsx";
 
 Working with Next.js and Relay over the past year, I have found myself using
 React's Suspense and Transitions a lot more than I did previously. I had very
