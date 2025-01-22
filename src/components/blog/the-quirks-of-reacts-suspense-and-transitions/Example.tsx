@@ -41,9 +41,10 @@ export default function Example({
         padding: "24px",
       }}
     >
-      <div style={{ fontSize: "12px" }}>
+      <div className="inline-flex-layout" style={{ fontSize: "12px" }}>
         {header || num}
         <button
+          className="button"
           type="button"
           onClick={() => {
             setExampleId(randomStr());

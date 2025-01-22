@@ -24,11 +24,20 @@ import IsPendingConsoleExample from "../../components/blog/the-quirks-of-reacts-
 import CombinedIsPendingWithStateExample from "../../components/blog/the-quirks-of-reacts-suspense-and-transitions/examples/CombinedIsPendingWithStateExample.jsx";
 import IsPendingNullExample from "../../components/blog/the-quirks-of-reacts-suspense-and-transitions/examples/IsPendingNullExample.jsx";
 
-Working with Next.js and Relay over the past year, I have found myself using
-React's Suspense and Transitions a lot more than I did previously. I had very
-minimal experience with Suspense but none when it came to Transitions.
+I spent 2024 working on refactoring a React Router application that uses
+`useSWR` to one one that uses Next.js and Relay. Over the course of this project
+I have found myself using React's Suspense and Transitions a lot more than I did
+previously. I had very minimal experience with Suspense but none when it came to
+Transitions.
 
-What is a Transition, and how do we use them in React? As explained in the
+Despite months of using `<Suspense>`, `useTransition`, `useLazyLoadQuery`,
+`useQueryLoader`, and `loading.tsx`, I couldn't reliably explain how they
+worked. So I set out to learn more about Transitions, only to end up a little
+more confused than when I started. This post is an attempt to probe and explain
+how Suspense and Transitions work, while highlighting some quirky behavior that
+I came across while writing it.
+
+What exactly is a Transition? As explained in the
 [React v18.0 blog posted on March 29, 2022](https://react.dev/blog/2022/03/29/react-v18),
 Transitions are used to "distinguish between urgent and non-urgent updates".
 
@@ -41,41 +50,37 @@ Transitions are used to "distinguish between urgent and non-urgent updates".
 > Typically, for the best user experience, a single user input should result in
 > both an urgent update and a non-urgent one.
 
-While Next and Relay both utilize Transitions, there were abstracted in such a
-way that I never properly understood how they worked. Despite months of using
-`<Suspense>`, `useTransition` (and `startTransition`), and `loading.tsx`, I
-couldn't reliably explain how they worked. So I set out to learn Transitions,
-and what I found has left me a little bit confused.
+An interesting explanation nonetheless, it does not adequately capture how
+Transitions work, and how to use them. A contrived example is in order.
 
-Let's dive in.
+## Select Your Favorite Dessert
 
-## Non Suspense Example
-
-Here's an autocomplete for selecting a dessert.
+Here's an autocomplete for selecting a dessert that does not use `<Suspense>`.
 
 <NonTransitionExample client:only="react" />
 
-When you select a dessert that has flavor options ("Mom's Famous Chocolate Chip
-Cookies" don't have any flavor options), another autocomplete is rendered below
-it, prompting you to select a dessert flavor. The flavors are fetched from an
-API, which means we want to show a loading state while that fetch is happening.
-The `loading` state for `<FlavorSelect>` in the example below is determined by
-the absence of `flavorOptions`.
+When you select a dessert that has flavor options (there are no flavor options
+for "Mom's Famous Chocolate Chip Cookies"), another autocomplete is rendered
+below it, prompting you to select a dessert flavor. The flavors are fetched from
+an API, which means we want to show a loading state while that fetch is
+happening. Once the flavors have finished loading, `<FlavorSelect>`'s loading
+state has been replaced with flavors for the dessert option you chose. (If the
+dessert has flavor options.) Suspense is not being used to render a fallback UI
+while the data is loading. Even if there was Suspense being used, the data
+fetching itself is not "Suspense-enabled".
 
-```jsx
-<FlavorSelect loading={!flavorOptions} />
-```
-
-Once the flavors have finished loading, `setFlavorOptions` is called with that
-result, and the `loading` prop is set to true. There is no Suspense or
-`startTransition`. Just local state variables that get called after the async
-fetch is completed. Pretty standard stuff.
-
-## Prevent Transitions From Triggering Parent Loading States
+## Suspense-enabled Data Fetching
 
 Now imagine we have a framework like Next that has an app loading state that
 utilizes Suspense. Any app loading event, such as a changing a route, will show
-the app's Suspense fallback UI.
+the app's Suspense fallback UI. And our data fetching itself is
+Suspense-enabled.
+
+[Per React's documentation, "Suspense-enabled" means the following](https://react.dev/reference/react/Suspense):
+
+> 1. Data fetching with Suspense-enabled frameworks like Relay and Next.js
+> 1. Lazy-loading component code with `lazy`
+> 1. Reading the value of a cached Promise with `use`
 
 In the example below, the `<FlavorSelect>` component triggers a Transition when
 it fetches data. However the `<FlavorSelect>` does not have its own Suspense
