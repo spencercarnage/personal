@@ -19,7 +19,7 @@ export default function SuspenseWithUseApp() {
   };
 
   return (
-    <>
+    <Suspense fallback="App Loading...">
       <DessertAutocomplete onChange={handleChange} />
 
       <Suspense fallback={`Loading ${selectedDessert?.label} flavors...`}>
@@ -34,6 +34,6 @@ export default function SuspenseWithUseApp() {
           />
         )}
       </Suspense>
-    </>
+    </Suspense>
   );
 }
