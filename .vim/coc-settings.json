@@ -1,5 +1,4 @@
 {
   "tsserver.log": "verbose",
-  "workspace.workspaceFolderCheckCwd": false,
-  "tsserver.useLocalTsdk": true
+  "workspace.workspaceFolderCheckCwd": false
 }
